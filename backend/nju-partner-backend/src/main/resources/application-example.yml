@@ -1,3 +1,6 @@
+# Example application config. Do NOT commit real passwords to the repository.
+# Copy this file to application-local.yml and fill in real values for local development.
+
 server:
   port: 8080
 
@@ -8,7 +11,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/nju_partner?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: root
-    password: 1234
+    password: 1234  # <--- replace locally, do not commit
 
 mybatis-plus:
   configuration:
@@ -23,8 +26,15 @@ mybatis-plus:
 
 jwt:
   secret: nju-partner-jwt-secret-key-change-in-production
-  expiration: 86400000
+  # secret should be long enough for HS256 (recommend >= 32 chars)
+  expiration: 86400000 # 1 day in milliseconds
 
 logging:
   level:
     com.nju.partner: debug
+
+# Notes:
+# - For local development copy this file to src/main/resources/application-local.yml
+#   and set spring.config.additional-location or activate profile 'local' as needed.
+# - Never put secrets (DB passwords, JWT secret) into version control.
+
