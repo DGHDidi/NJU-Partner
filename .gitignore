@@ -1,0 +1,25 @@
+# Node / Vue
+frontend/**/node_modules/
+frontend/**/dist/
+frontend/**/.env
+frontend/**/.env.local
+
+# Java / Spring Boot
+backend/**/target/
+backend/**/.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Local configs
+backend/**/application-local.yml
+backend/**/application-dev.yml
