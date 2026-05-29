@@ -8,7 +8,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/nju_partner?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: root
-    password: your_password
+    password: 1234
 
 mybatis-plus:
   configuration:
@@ -17,9 +17,6 @@ mybatis-plus:
   global-config:
     db-config:
       id-type: auto
-      logic-delete-field: deleted
-      logic-not-delete-value: 0
-      logic-delete-value: 1
 
 jwt:
   secret: nju-partner-jwt-secret-key-change-in-production
