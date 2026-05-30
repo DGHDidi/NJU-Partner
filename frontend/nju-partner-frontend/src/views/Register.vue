@@ -1,0 +1,193 @@
+<script setup>
+import { reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { register } from '@/api/user'
+import { CAMPUS_OPTIONS, GRADE_OPTIONS } from '@/constants'
+
+const router = useRouter()
+const formRef = ref()
+const loading = ref(false)
+
+const form = reactive({
+  username: '',
+  password: '',
+  confirmPassword: '',
+  nickname: '',
+  campus: '',
+  grade: '',
+  major: '',
+})
+
+const validateNoSpace = (_rule, value, callback) => {
+  if (value && /\s/.test(value)) {
+    callback(new Error('不能包含空格'))
+  } else {
+    callback()
+  }
+}
+
+const validateConfirmPassword = (_rule, value, callback) => {
+  if (!value) {
+    callback(new Error('请再次输入密码'))
+  } else if (value !== form.password) {
+    callback(new Error('两次输入的密码不一致'))
+  } else {
+    callback()
+  }
+}
+
+const rules = {
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 3, max: 10, message: '用户名长度为 3-10 个字符', trigger: 'blur' },
+    { validator: validateNoSpace, trigger: 'blur' },
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, max: 50, message: '密码长度至少 6 位', trigger: 'blur' },
+    { validator: validateNoSpace, trigger: 'blur' },
+  ],
+  confirmPassword: [
+    { required: true, validator: validateConfirmPassword, trigger: 'blur' },
+  ],
+  nickname: [
+    { required: true, message: '请输入昵称', trigger: 'blur' },
+    { max: 10, message: '昵称不能超过 10 个字符', trigger: 'blur' },
+    { validator: validateNoSpace, trigger: 'blur' },
+  ],
+  campus: [
+    { required: true, message: '请选择校区', trigger: 'change' },
+  ],
+  grade: [
+    { required: true, message: '请选择年级', trigger: 'change' },
+  ],
+  major: [
+    { required: true, message: '请输入专业', trigger: 'blur' },
+    { max: 100, message: '专业不能超过 100 个字符', trigger: 'blur' },
+  ],
+}
+
+async function handleRegister() {
+  const valid = await formRef.value?.validate().catch(() => false)
+  if (!valid) return
+
+  loading.value = true
+  try {
+    await register({
+      username: form.username,
+      password: form.password,
+      nickname: form.nickname,
+      campus: form.campus,
+      grade: form.grade,
+      major: form.major,
+    })
+    ElMessage.success('注册成功，请登录')
+    router.push({ name: 'Login' })
+  } catch {
+    // 错误提示由 request.js 统一处理
+  } finally {
+    loading.value = false
+  }
+}
+</script>
+
+<template>
+  <div class="page page-auth">
+    <el-card class="auth-card">
+      <template #header>
+        <h2>注册</h2>
+        <p class="subtitle">加入南大轻搭子，找到你的校园搭子</p>
+      </template>
+
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="rules"
+        label-width="90px"
+        @submit.prevent="handleRegister"
+      >
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="form.username" placeholder="3-10 个字符，不能含空格" clearable />
+        </el-form-item>
+        <el-form-item label="密码" prop="password">
+          <el-input
+            v-model="form.password"
+            type="password"
+            placeholder="至少 6 位，不能含空格"
+            show-password
+          />
+        </el-form-item>
+        <el-form-item label="确认密码" prop="confirmPassword">
+          <el-input
+            v-model="form.confirmPassword"
+            type="password"
+            placeholder="请再次输入密码"
+            show-password
+          />
+        </el-form-item>
+        <el-form-item label="昵称" prop="nickname">
+          <el-input v-model="form.nickname" placeholder="不超过 10 个字符，不能含空格" clearable />
+        </el-form-item>
+        <el-form-item label="校区" prop="campus">
+          <el-select v-model="form.campus" placeholder="请选择校区" style="width: 100%">
+            <el-option
+              v-for="item in CAMPUS_OPTIONS"
+              :key="item"
+              :label="item"
+              :value="item"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="年级" prop="grade">
+          <el-select v-model="form.grade" placeholder="请选择年级" style="width: 100%">
+            <el-option
+              v-for="item in GRADE_OPTIONS"
+              :key="item"
+              :label="item"
+              :value="item"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="专业" prop="major">
+          <el-input v-model="form.major" placeholder="请输入专业" clearable />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" :loading="loading" @click="handleRegister">
+            注册
+          </el-button>
+          <el-button link type="primary" @click="router.push({ name: 'Login' })">
+            已有账号，去登录
+          </el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
+  </div>
+</template>
+
+<style scoped>
+.page-auth {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.auth-card {
+  width: 480px;
+}
+
+.auth-card h2 {
+  margin: 0;
+  text-align: center;
+  color: #303133;
+}
+
+.subtitle {
+  margin: 8px 0 0;
+  text-align: center;
+  font-size: 13px;
+  color: #909399;
+}
+</style>
