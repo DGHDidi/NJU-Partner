@@ -19,6 +19,8 @@ import com.nju.partner.vo.UserVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements PostService {
@@ -27,6 +29,17 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     public PostServiceImpl(UserService userService) {
         this.userService = userService;
+    }
+
+    @Override
+    public List<PostVO> getMyPosts() {
+        Long userId = BaseContext.getCurrentUserId();
+        if (userId == null) {
+            throw new BusinessException(ResultCode.UNAUTHORIZED);
+        }
+        return this.list(new LambdaQueryWrapper<Post>().eq(Post::getUserId, userId)
+                .orderByDesc(Post::getCreatedTime))
+                .stream().map(this::toPostVO).collect(Collectors.toList());
     }
 
     @Override
@@ -66,6 +79,15 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         }
         if (query.getStatus() != null) {
             wrapper.eq(Post::getStatus, query.getStatus());
+        }
+        if (StringUtils.hasText(query.getGrade())) {
+            wrapper.eq(Post::getGradeLimit, query.getGrade().trim());
+        }
+        if (query.getStartTime() != null) {
+            wrapper.ge(Post::getActivityTime, query.getStartTime());
+        }
+        if (query.getEndTime() != null) {
+            wrapper.le(Post::getActivityTime, query.getEndTime());
         }
         if (StringUtils.hasText(query.getKeyword())) {
             String keyword = query.getKeyword().trim();

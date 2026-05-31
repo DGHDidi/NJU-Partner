@@ -17,4 +17,7 @@ public interface ApplicationService extends IService<Application> {
     void rejectApplication(Long applicationId);
 
     void cancelApplication(Long applicationId);
+
+    // 我报名的记录
+    List<ApplicationVO> getMyApplications();
 }

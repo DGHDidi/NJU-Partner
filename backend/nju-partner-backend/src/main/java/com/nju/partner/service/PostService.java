@@ -6,6 +6,7 @@ import com.nju.partner.dto.PostCreateDTO;
 import com.nju.partner.dto.PostQueryDTO;
 import com.nju.partner.entity.Post;
 import com.nju.partner.vo.PostVO;
+import java.util.List;
 
 public interface PostService extends IService<Post> {
 
@@ -20,4 +21,7 @@ public interface PostService extends IService<Post> {
     void closePost(Long postId);
 
     void deletePost(Long postId);
+
+    // 我的发布
+    List<PostVO> getMyPosts();
 }
