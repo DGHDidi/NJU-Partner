@@ -1,22 +1,51 @@
 <script setup>
-import { ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { getPostList } from '@/api/post'
 import Navbar from '@/components/Navbar.vue'
 import FilterBar from '@/components/FilterBar.vue'
 import PostCard from '@/components/PostCard.vue'
 
 const router = useRouter()
 const postList = ref([])
-const pagination = ref({ pageNum: 1, pageSize: 10, total: 0 })
+const loading = ref(false)
+const pagination = reactive({ pageNum: 1, pageSize: 10, total: 0 })
+const filters = reactive({
+  keyword: '',
+  campus: '',
+  type: '',
+  status: '',
+  grade: '',
+})
 
-// TODO: 调用 api/post.js getPostList 加载帖子列表
-function handleSearch(_filters) {
-  // TODO: 根据筛选条件重新请求
+async function loadPosts() {
+  loading.value = true
+  try {
+    const data = await getPostList({
+      ...filters,
+      pageNum: pagination.pageNum,
+      pageSize: pagination.pageSize,
+    })
+    postList.value = data.records || []
+    pagination.total = data.total || 0
+  } finally {
+    loading.value = false
+  }
+}
+
+function handleSearch(newFilters) {
+  Object.assign(filters, newFilters)
+  pagination.pageNum = 1
+  loadPosts()
 }
 
 function handlePostClick(post) {
-  router.push({ name: 'PostDetail', params: { id: post.id || 1 } })
+  router.push({ name: 'PostDetail', params: { id: post.id } })
 }
+
+watch(() => pagination.pageNum, loadPosts)
+
+onMounted(loadPosts)
 </script>
 
 <template>
@@ -31,16 +60,24 @@ function handlePostClick(post) {
 
       <FilterBar @search="handleSearch" />
 
-      <div v-if="postList.length === 0" class="empty">
-        <el-empty description="暂无组队帖，框架已就绪，待接入接口" />
-      </div>
+      <el-skeleton :loading="loading" animated :count="3">
+        <template #template>
+          <el-skeleton-item variant="rect" style="height: 120px; margin-bottom: 12px" />
+        </template>
 
-      <PostCard
-        v-for="post in postList"
-        :key="post.id"
-        :post="post"
-        @click="handlePostClick(post)"
-      />
+        <template #default>
+          <div v-if="postList.length === 0" class="empty">
+            <el-empty description="暂无组队帖" />
+          </div>
+
+          <PostCard
+            v-for="post in postList"
+            :key="post.id"
+            :post="post"
+            @click="handlePostClick(post)"
+          />
+        </template>
+      </el-skeleton>
 
       <div class="pagination">
         <el-pagination

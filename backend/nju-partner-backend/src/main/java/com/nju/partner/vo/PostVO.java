@@ -22,6 +22,7 @@ public class PostVO {
     private String majorLimit;
     private String contact;
     private Integer status;
+    private Boolean favorited;
     private LocalDateTime createdTime;
     private LocalDateTime updatedTime;
 }

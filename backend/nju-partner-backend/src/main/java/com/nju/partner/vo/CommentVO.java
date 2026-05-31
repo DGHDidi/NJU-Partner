@@ -5,16 +5,14 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-public class ApplicationVO {
+public class CommentVO {
 
     private Long id;
     private Long postId;
     private Long userId;
-    private String message;
+    private String content;
     private Integer status;
     private LocalDateTime createdTime;
-    private LocalDateTime updatedTime;
-    private UserVO applicant;
+    private UserVO user;
     private String postTitle;
-    private Integer postStatus;
 }

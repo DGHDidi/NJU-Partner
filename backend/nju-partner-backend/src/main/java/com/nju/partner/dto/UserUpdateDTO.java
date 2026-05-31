@@ -1,17 +1,13 @@
-package com.nju.partner.vo;
+package com.nju.partner.dto;
 
 import lombok.Data;
 
 @Data
-public class UserVO {
+public class UserUpdateDTO {
 
-    private Long id;
-    private String username;
     private String nickname;
     private String avatar;
     private String campus;
     private String grade;
     private String major;
-    private String role;
-    private Integer status;
 }

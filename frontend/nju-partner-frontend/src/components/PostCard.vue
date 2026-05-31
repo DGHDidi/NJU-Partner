@@ -33,7 +33,7 @@ function handleClick() {
 
     <div class="post-footer">
       <span>人数：{{ post.currentCount ?? 0 }} / {{ post.needCount ?? 0 }}</span>
-      <span>发布者：{{ post.publisherNickname || '—' }}</span>
+      <span>发布者：{{ post.publisher?.nickname || post.publisher?.username || '—' }}</span>
     </div>
   </el-card>
 </template>

@@ -162,6 +162,11 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
         vo.setStatus(application.getStatus());
         vo.setCreatedTime(application.getCreatedTime());
         vo.setUpdatedTime(application.getUpdatedTime());
+        Post post = postService.getById(application.getPostId());
+        if (post != null) {
+            vo.setPostTitle(post.getTitle());
+            vo.setPostStatus(post.getStatus());
+        }
 
         User user = userService.getById(application.getUserId());
         if (user != null) {

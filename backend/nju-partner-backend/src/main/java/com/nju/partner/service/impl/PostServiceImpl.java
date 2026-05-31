@@ -12,6 +12,7 @@ import com.nju.partner.entity.Post;
 import com.nju.partner.entity.User;
 import com.nju.partner.exception.BusinessException;
 import com.nju.partner.mapper.PostMapper;
+import com.nju.partner.service.FavoriteService;
 import com.nju.partner.service.PostService;
 import com.nju.partner.service.UserService;
 import com.nju.partner.vo.PostVO;
@@ -24,9 +25,11 @@ import org.springframework.util.StringUtils;
 public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements PostService {
 
     private final UserService userService;
+    private final FavoriteService favoriteService;
 
-    public PostServiceImpl(UserService userService) {
+    public PostServiceImpl(UserService userService, FavoriteService favoriteService) {
         this.userService = userService;
+        this.favoriteService = favoriteService;
     }
 
     @Override
@@ -66,6 +69,9 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         }
         if (query.getStatus() != null) {
             wrapper.eq(Post::getStatus, query.getStatus());
+        }
+        if (query.getUserId() != null) {
+            wrapper.eq(Post::getUserId, query.getUserId());
         }
         if (StringUtils.hasText(query.getKeyword())) {
             String keyword = query.getKeyword().trim();
@@ -172,7 +178,13 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             userVO.setGrade(user.getGrade());
             userVO.setMajor(user.getMajor());
             userVO.setRole(user.getRole());
+            userVO.setStatus(user.getStatus());
             vo.setPublisher(userVO);
+        }
+
+        Long currentUserId = BaseContext.getCurrentUserId();
+        if (currentUserId != null) {
+            vo.setFavorited(favoriteService.isFavorited(currentUserId, post.getId()));
         }
 
         return vo;
