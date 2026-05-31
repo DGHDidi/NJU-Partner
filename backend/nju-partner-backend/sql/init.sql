@@ -54,3 +54,82 @@ CREATE TABLE post
     updated_time  DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT ='组队帖表';
+
+-- ============================================
+-- 3. application 报名表
+-- ============================================
+DROP TABLE IF EXISTS application;
+CREATE TABLE application (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    post_id BIGINT NOT NULL COMMENT '帖子ID',
+    user_id BIGINT NOT NULL COMMENT '报名用户ID',
+    message VARCHAR(255) COMMENT '报名留言',
+    status INT DEFAULT 0 COMMENT '状态：0待审核，1已通过，2已拒绝，3已取消',
+    created_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_post_user (post_id, user_id)
+ ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT='报名表';
+
+-- ============================================
+-- 4. comment 评论表
+-- ============================================
+DROP TABLE IF EXISTS comment;
+CREATE TABLE comment (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    post_id BIGINT NOT NULL COMMENT '帖子ID',
+    user_id BIGINT NOT NULL COMMENT '评论用户ID',
+    content VARCHAR(500) NOT NULL COMMENT '评论内容',
+    status INT DEFAULT 1 COMMENT '状态：1正常，0删除',
+    created_time DATETIME DEFAULT CURRENT_TIMESTAMP
+ ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT='评论表';
+
+-- ============================================
+-- 5. favorite 收藏表
+-- ============================================
+DROP TABLE IF EXISTS favorite;
+CREATE TABLE favorite (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    post_id BIGINT NOT NULL COMMENT '帖子ID',
+    created_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_user_post (user_id, post_id)
+ ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT='收藏表';
+
+-- ============================================
+-- 6. category 分类表
+-- ============================================
+DROP TABLE IF EXISTS category;
+CREATE TABLE category (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(50) NOT NULL COMMENT '分类名称',
+    sort INT DEFAULT 0 COMMENT '排序',
+    status INT DEFAULT 1 COMMENT '状态：1启用，0禁用'
+ ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT='分类表';
+
+-- 初始分类数据
+INSERT INTO category (name, sort, status) VALUES
+('自习搭子', 1, 1),
+('运动搭子', 2, 1),
+('竞赛组队', 3, 1),
+('课程学习', 4, 1),
+('拼单', 5, 1),
+('饭搭子', 6, 1),
+('短途出行', 7, 1),
+('讲座同行', 8, 1),
+('社团活动', 9, 1),
+('跨校区同行', 10, 1),
+('其他', 99, 1);
+
+-- ============================================
+-- 7. admin_audit 审计表
+-- ============================================
+DROP TABLE IF EXISTS admin_audit;
+CREATE TABLE admin_audit (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    admin_id BIGINT,
+    action VARCHAR(100),
+    target_type VARCHAR(50),
+    target_id BIGINT,
+    detail VARCHAR(255),
+    created_time DATETIME DEFAULT CURRENT_TIMESTAMP
+ ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT='管理员操作审计表';

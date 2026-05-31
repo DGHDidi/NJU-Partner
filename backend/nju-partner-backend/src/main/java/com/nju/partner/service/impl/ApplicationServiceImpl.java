@@ -32,6 +32,18 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
     }
 
     @Override
+    public List<ApplicationVO> getMyApplications() {
+        Long userId = BaseContext.getCurrentUserId();
+        if (userId == null) {
+            throw new BusinessException(ResultCode.UNAUTHORIZED);
+        }
+        List<Application> applications = this.list(new LambdaQueryWrapper<Application>()
+                .eq(Application::getUserId, userId)
+                .orderByDesc(Application::getCreatedTime));
+        return applications.stream().map(this::toApplicationVO).collect(Collectors.toList());
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public void apply(Long postId, String message) {
         Long userId = BaseContext.getCurrentUserId();
