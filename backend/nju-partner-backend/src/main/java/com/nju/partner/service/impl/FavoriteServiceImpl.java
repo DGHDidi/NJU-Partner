@@ -20,8 +20,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -83,11 +85,14 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
 
         List<Post> posts = postMapper.selectList(new LambdaQueryWrapper<Post>().in(Post::getId, postIds));
         Map<Long, Post> postMap = posts.stream().collect(Collectors.toMap(Post::getId, item -> item));
+        List<Long> userIds = posts.stream().map(Post::getUserId).distinct().toList();
+        Map<Long, User> userMap = userService.listByIds(userIds).stream()
+                .collect(Collectors.toMap(User::getId, item -> item));
 
         List<PostVO> records = postIds.stream()
                 .map(postMap::get)
-                .filter(post -> post != null)
-                .map(post -> toPostVO(post, userId))
+                .filter(Objects::nonNull)
+                .map(post -> toPostVO(post, userMap))
                 .toList();
 
         Page<PostVO> result = new Page<>(favoritePage.getCurrent(), favoritePage.getSize(), favoritePage.getTotal());
@@ -100,12 +105,25 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
         if (userId == null || postId == null) {
             return false;
         }
-        return this.count(new LambdaQueryWrapper<Favorite>()
-                .eq(Favorite::getUserId, userId)
-                .eq(Favorite::getPostId, postId)) > 0;
+        return getFavoritedStatusMap(userId, List.of(postId)).getOrDefault(postId, false);
     }
 
-    private PostVO toPostVO(Post post, Long currentUserId) {
+    @Override
+    public Map<Long, Boolean> getFavoritedStatusMap(Long userId, List<Long> postIds) {
+        if (userId == null || postIds == null || postIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<Favorite> favorites = this.list(new LambdaQueryWrapper<Favorite>()
+                .eq(Favorite::getUserId, userId)
+                .in(Favorite::getPostId, postIds));
+        Map<Long, Boolean> map = new HashMap<>();
+        for (Favorite favorite : favorites) {
+            map.put(favorite.getPostId(), true);
+        }
+        return map;
+    }
+
+    private PostVO toPostVO(Post post, Map<Long, User> userMap) {
         PostVO vo = new PostVO();
         vo.setId(post.getId());
         vo.setUserId(post.getUserId());
@@ -124,7 +142,7 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
         vo.setCreatedTime(post.getCreatedTime());
         vo.setUpdatedTime(post.getUpdatedTime());
 
-        User user = userService.getById(post.getUserId());
+        User user = userMap.get(post.getUserId());
         if (user != null) {
             UserVO userVO = new UserVO();
             userVO.setId(user.getId());
@@ -139,7 +157,7 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
             vo.setPublisher(userVO);
         }
 
-        vo.setFavorited(isFavorited(currentUserId, post.getId()));
+        vo.setFavorited(true);
         return vo;
     }
 

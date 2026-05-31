@@ -21,6 +21,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 @Service
 public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements PostService {
 
@@ -84,8 +89,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
         Page<Post> page = new Page<>(query.getPageNum(), query.getPageSize());
         Page<Post> postPage = this.page(page, wrapper);
-
-        return postPage.convert(this::toPostVO);
+        return buildPostPage(postPage);
     }
 
     @Override
@@ -94,7 +98,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         if (post == null) {
             throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "帖子不存在");
         }
-        return toPostVO(post);
+        return toPostVO(post, Collections.emptyMap(), Collections.emptyMap());
     }
 
     @Override
@@ -148,7 +152,20 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         return post;
     }
 
-    private PostVO toPostVO(Post post) {
+    private IPage<PostVO> buildPostPage(Page<Post> postPage) {
+        List<Post> posts = postPage.getRecords();
+        List<Long> userIds = posts.stream().map(Post::getUserId).distinct().toList();
+        List<Long> postIds = posts.stream().map(Post::getId).toList();
+        Map<Long, User> userMap = userIds.isEmpty() ? Collections.emptyMap() :
+                userService.listByIds(userIds).stream().collect(Collectors.toMap(User::getId, item -> item));
+        Map<Long, Boolean> favoriteMap = favoriteService.getFavoritedStatusMap(BaseContext.getCurrentUserId(), postIds);
+
+        Page<PostVO> result = new Page<>(postPage.getCurrent(), postPage.getSize(), postPage.getTotal());
+        result.setRecords(posts.stream().map(post -> toPostVO(post, userMap, favoriteMap)).toList());
+        return result;
+    }
+
+    private PostVO toPostVO(Post post, Map<Long, User> userMap, Map<Long, Boolean> favoriteMap) {
         PostVO vo = new PostVO();
         vo.setId(post.getId());
         vo.setUserId(post.getUserId());
@@ -167,7 +184,10 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         vo.setCreatedTime(post.getCreatedTime());
         vo.setUpdatedTime(post.getUpdatedTime());
 
-        User user = userService.getById(post.getUserId());
+        User user = userMap.get(post.getUserId());
+        if (user == null) {
+            user = userService.getById(post.getUserId());
+        }
         if (user != null) {
             UserVO userVO = new UserVO();
             userVO.setId(user.getId());
@@ -182,9 +202,11 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             vo.setPublisher(userVO);
         }
 
-        Long currentUserId = BaseContext.getCurrentUserId();
-        if (currentUserId != null) {
-            vo.setFavorited(favoriteService.isFavorited(currentUserId, post.getId()));
+        if (!favoriteMap.isEmpty()) {
+            vo.setFavorited(favoriteMap.getOrDefault(post.getId(), false));
+        } else {
+            Long currentUserId = BaseContext.getCurrentUserId();
+            vo.setFavorited(currentUserId != null && favoriteService.isFavorited(currentUserId, post.getId()));
         }
 
         return vo;

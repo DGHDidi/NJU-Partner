@@ -20,7 +20,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements CommentService {
@@ -57,13 +60,11 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "帖子不存在");
         }
 
-        return this.list(new LambdaQueryWrapper<Comment>()
-                        .eq(Comment::getPostId, postId)
-                        .eq(Comment::getStatus, 1)
-                        .orderByDesc(Comment::getCreatedTime))
-                .stream()
-                .map(this::toCommentVO)
-                .toList();
+        List<Comment> comments = this.list(new LambdaQueryWrapper<Comment>()
+                .eq(Comment::getPostId, postId)
+                .eq(Comment::getStatus, 1)
+                .orderByDesc(Comment::getCreatedTime));
+        return toCommentVOList(comments);
     }
 
     @Override
@@ -95,10 +96,22 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         }
 
         Page<Comment> commentPage = this.page(new Page<>(safePageNum(pageNum), safePageSize(pageSize)), wrapper);
-        return commentPage.convert(this::toCommentVO);
+        Page<CommentVO> result = new Page<>(commentPage.getCurrent(), commentPage.getSize(), commentPage.getTotal());
+        result.setRecords(toCommentVOList(commentPage.getRecords()));
+        return result;
     }
 
-    private CommentVO toCommentVO(Comment comment) {
+    private List<CommentVO> toCommentVOList(List<Comment> comments) {
+        List<Long> userIds = comments.stream().map(Comment::getUserId).distinct().toList();
+        Map<Long, User> userMap = userIds.isEmpty() ? Collections.emptyMap() :
+                userService.listByIds(userIds).stream().collect(Collectors.toMap(User::getId, item -> item));
+        List<Long> postIds = comments.stream().map(Comment::getPostId).distinct().toList();
+        Map<Long, Post> postMap = postIds.isEmpty() ? Collections.emptyMap() :
+                postMapper.selectBatchIds(postIds).stream().collect(Collectors.toMap(Post::getId, item -> item));
+        return comments.stream().map(item -> toCommentVO(item, userMap, postMap)).toList();
+    }
+
+    private CommentVO toCommentVO(Comment comment, Map<Long, User> userMap, Map<Long, Post> postMap) {
         CommentVO vo = new CommentVO();
         vo.setId(comment.getId());
         vo.setPostId(comment.getPostId());
@@ -107,7 +120,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         vo.setStatus(comment.getStatus());
         vo.setCreatedTime(comment.getCreatedTime());
 
-        User user = userService.getById(comment.getUserId());
+        User user = userMap.get(comment.getUserId());
         if (user != null) {
             UserVO userVO = new UserVO();
             userVO.setId(user.getId());
@@ -122,7 +135,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             vo.setUser(userVO);
         }
 
-        Post post = postMapper.selectById(comment.getPostId());
+        Post post = postMap.get(comment.getPostId());
         if (post != null) {
             vo.setPostTitle(post.getTitle());
         }

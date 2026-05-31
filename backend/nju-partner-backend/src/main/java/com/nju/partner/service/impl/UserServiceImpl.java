@@ -28,6 +28,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
@@ -139,7 +144,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 new LambdaQueryWrapper<Post>()
                         .eq(Post::getUserId, userId)
                         .orderByDesc(Post::getCreatedTime));
-        return page.convert(this::toPostVO);
+        return buildPostPage(page, userId);
     }
 
     @Override
@@ -149,7 +154,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 new LambdaQueryWrapper<Application>()
                         .eq(Application::getUserId, userId)
                         .orderByDesc(Application::getCreatedTime));
-        return page.convert(this::toMyApplicationVO);
+        List<Long> postIds = page.getRecords().stream().map(Application::getPostId).distinct().toList();
+        Map<Long, Post> postMap = postIds.isEmpty() ? Collections.emptyMap() :
+                postMapper.selectBatchIds(postIds).stream().collect(Collectors.toMap(Post::getId, item -> item));
+        Page<ApplicationVO> result = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
+        result.setRecords(page.getRecords().stream().map(item -> toMyApplicationVO(item, postMap)).toList());
+        return result;
     }
 
     @Override
@@ -157,7 +167,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return favoriteService.getMyFavorites(pageNum, pageSize);
     }
 
-    private ApplicationVO toMyApplicationVO(Application application) {
+    private ApplicationVO toMyApplicationVO(Application application, Map<Long, Post> postMap) {
         ApplicationVO vo = new ApplicationVO();
         vo.setId(application.getId());
         vo.setPostId(application.getPostId());
@@ -167,7 +177,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         vo.setCreatedTime(application.getCreatedTime());
         vo.setUpdatedTime(application.getUpdatedTime());
 
-        Post post = postMapper.selectById(application.getPostId());
+        Post post = postMap.get(application.getPostId());
         if (post != null) {
             vo.setPostTitle(post.getTitle());
             vo.setPostStatus(post.getStatus());
@@ -175,7 +185,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return vo;
     }
 
-    private PostVO toPostVO(Post post) {
+    private IPage<PostVO> buildPostPage(Page<Post> page, Long currentUserId) {
+        List<Post> posts = page.getRecords();
+        List<Long> postIds = posts.stream().map(Post::getId).toList();
+        List<Long> publisherIds = posts.stream().map(Post::getUserId).distinct().toList();
+        Map<Long, User> userMap = publisherIds.isEmpty() ? Collections.emptyMap() :
+                this.listByIds(publisherIds).stream().collect(Collectors.toMap(User::getId, item -> item));
+        Map<Long, Boolean> favoriteMap = favoriteService.getFavoritedStatusMap(currentUserId, postIds);
+
+        Page<PostVO> result = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
+        result.setRecords(posts.stream().map(post -> toPostVO(post, userMap, favoriteMap)).toList());
+        return result;
+    }
+
+    private PostVO toPostVO(Post post, Map<Long, User> userMap, Map<Long, Boolean> favoriteMap) {
         PostVO vo = new PostVO();
         vo.setId(post.getId());
         vo.setUserId(post.getUserId());
@@ -194,15 +217,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         vo.setCreatedTime(post.getCreatedTime());
         vo.setUpdatedTime(post.getUpdatedTime());
 
-        User publisher = this.getById(post.getUserId());
+        User publisher = userMap.get(post.getUserId());
         if (publisher != null) {
             vo.setPublisher(toUserVO(publisher));
         }
 
-        Long currentUserId = BaseContext.getCurrentUserId();
-        if (currentUserId != null) {
-            vo.setFavorited(favoriteService.isFavorited(currentUserId, post.getId()));
-        }
+        vo.setFavorited(favoriteMap.getOrDefault(post.getId(), false));
         return vo;
     }
 
