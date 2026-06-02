@@ -23,17 +23,17 @@ function handleClick() {
     </div>
 
     <div class="post-meta">
-      <span>类型：{{ post.type || '—' }}</span>
-      <span>校区：{{ post.campus || '—' }}</span>
-      <span>地点：{{ post.location || '—' }}</span>
-      <span>时间：{{ post.activityTime || '—' }}</span>
+      <span>类型：{{ post.type || '-' }}</span>
+      <span>校区：{{ post.campus || '-' }}</span>
+      <span>地点：{{ post.location || '-' }}</span>
+      <span>时间：{{ post.activityTime || '-' }}</span>
     </div>
 
     <p class="post-desc">{{ post.description || '帖子描述占位' }}</p>
 
     <div class="post-footer">
       <span>人数：{{ post.currentCount ?? 0 }} / {{ post.needCount ?? 0 }}</span>
-      <span>发布者：{{ post.publisher?.nickname || post.publisher?.username || '—' }}</span>
+      <span>发布者：{{ post.publisher?.nickname || post.publisher?.username || '-' }}</span>
     </div>
   </el-card>
 </template>

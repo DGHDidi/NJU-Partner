@@ -61,8 +61,6 @@ async function handleLogin() {
     ElMessage.success('登录成功')
     const redirect = route.query.redirect
     router.push(typeof redirect === 'string' && redirect ? redirect : { name: 'Home' })
-  } catch {
-    // 错误提示由 request.js 统一处理
   } finally {
     loading.value = false
   }

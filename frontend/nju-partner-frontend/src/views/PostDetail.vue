@@ -113,15 +113,15 @@ onMounted(initData)
           <h2>{{ post.title }}</h2>
         </template>
         <el-descriptions :column="1" border>
-          <el-descriptions-item label="发布者">{{ post.publisher?.nickname || post.publisher?.username || '—' }}</el-descriptions-item>
+          <el-descriptions-item label="发布者">{{ post.publisher?.nickname || post.publisher?.username || '-' }}</el-descriptions-item>
           <el-descriptions-item label="活动类型">{{ post.type }}</el-descriptions-item>
           <el-descriptions-item label="状态">{{ POST_STATUS_MAP[post.status] }}</el-descriptions-item>
-          <el-descriptions-item label="活动校区">{{ post.campus || '—' }}</el-descriptions-item>
-          <el-descriptions-item label="具体地点">{{ post.location || '—' }}</el-descriptions-item>
-          <el-descriptions-item label="活动时间">{{ post.activityTime || '—' }}</el-descriptions-item>
+          <el-descriptions-item label="活动校区">{{ post.campus || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="具体地点">{{ post.location || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="活动时间">{{ post.activityTime || '-' }}</el-descriptions-item>
           <el-descriptions-item label="人数">{{ post.currentCount }} / {{ post.needCount }}</el-descriptions-item>
-          <el-descriptions-item label="联系方式">{{ post.contact || '—' }}</el-descriptions-item>
-          <el-descriptions-item label="活动描述">{{ post.description || '—' }}</el-descriptions-item>
+          <el-descriptions-item label="联系方式">{{ post.contact || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="活动描述">{{ post.description || '-' }}</el-descriptions-item>
         </el-descriptions>
 
         <div class="actions">
@@ -166,7 +166,7 @@ onMounted(initData)
         <el-table v-else :data="applications" border>
           <el-table-column prop="applicant.nickname" label="报名者" min-width="140">
             <template #default="scope">
-              {{ scope.row.applicant?.nickname || scope.row.applicant?.username || '—' }}
+              {{ scope.row.applicant?.nickname || scope.row.applicant?.username || '-' }}
             </template>
           </el-table-column>
           <el-table-column prop="message" label="留言" min-width="160" />

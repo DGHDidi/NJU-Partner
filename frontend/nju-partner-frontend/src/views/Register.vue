@@ -84,8 +84,6 @@ async function handleRegister() {
     })
     ElMessage.success('注册成功，请登录')
     router.push({ name: 'Login' })
-  } catch {
-    // 错误提示由 request.js 统一处理
   } finally {
     loading.value = false
   }
