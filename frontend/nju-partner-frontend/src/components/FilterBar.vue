@@ -1,6 +1,6 @@
 <script setup>
 import { reactive } from 'vue'
-import { CAMPUS_OPTIONS, POST_TYPE_OPTIONS, POST_STATUS_MAP } from '@/constants'
+import { CAMPUS_OPTIONS, GRADE_OPTIONS, POST_TYPE_OPTIONS, POST_STATUS_MAP } from '@/constants'
 
 const emit = defineEmits(['search'])
 
@@ -64,6 +64,16 @@ function handleReset() {
             :key="item.value"
             :label="item.label"
             :value="item.value"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="年级">
+        <el-select v-model="filters.grade" placeholder="全部年级" clearable>
+          <el-option
+            v-for="item in GRADE_OPTIONS"
+            :key="item"
+            :label="item"
+            :value="item"
           />
         </el-select>
       </el-form-item>

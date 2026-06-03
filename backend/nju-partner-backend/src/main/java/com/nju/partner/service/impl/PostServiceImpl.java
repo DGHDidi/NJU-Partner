@@ -78,6 +78,16 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         if (query.getUserId() != null) {
             wrapper.eq(Post::getUserId, query.getUserId());
         }
+        if (StringUtils.hasText(query.getGrade())) {
+            String grade = query.getGrade().trim();
+            wrapper.and(w -> w.isNull(Post::getGradeLimit)
+                    .or()
+                    .eq(Post::getGradeLimit, "")
+                    .or()
+                    .eq(Post::getGradeLimit, "不限")
+                    .or()
+                    .like(Post::getGradeLimit, grade));
+        }
         if (StringUtils.hasText(query.getKeyword())) {
             String keyword = query.getKeyword().trim();
             wrapper.and(w -> w.like(Post::getTitle, keyword)

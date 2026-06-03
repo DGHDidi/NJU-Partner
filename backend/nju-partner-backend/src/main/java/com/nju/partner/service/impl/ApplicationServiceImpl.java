@@ -98,6 +98,17 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
         this.updateById(application);
 
         Post post = postService.getById(application.getPostId());
+        if (post == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "帖子不存在");
+        }
+        if (post.getStatus() != 0) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "只有招募中的帖子可以通过报名");
+        }
+        if (post.getCurrentCount() != null && post.getNeedCount() != null
+                && post.getCurrentCount() >= post.getNeedCount()) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "帖子人数已满");
+        }
+
         int newCount = post.getCurrentCount() + 1;
         post.setCurrentCount(newCount);
         if (newCount >= post.getNeedCount()) {
@@ -142,6 +153,9 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
         }
         if (checkPostOwner) {
             Post post = postService.getById(application.getPostId());
+            if (post == null) {
+                throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "帖子不存在");
+            }
             if (!post.getUserId().equals(userId)) {
                 throw new BusinessException(ResultCode.FORBIDDEN.getCode(), "只有帖子发布者可以操作报名");
             }

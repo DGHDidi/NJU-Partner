@@ -22,7 +22,15 @@ public class JwtInterceptor implements HandlerInterceptor {
     }
 
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            return true;
+        }
+
         String authHeader = request.getHeader("Authorization");
+        if ((authHeader == null || authHeader.isBlank()) && isPublicReadRequest(request)) {
+            return true;
+        }
+
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             throw new BusinessException(ResultCode.UNAUTHORIZED);
         }
@@ -41,6 +49,17 @@ public class JwtInterceptor implements HandlerInterceptor {
 
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
         BaseContext.removeCurrentUserId();
+    }
+
+    private boolean isPublicReadRequest(HttpServletRequest request) {
+        if (!"GET".equalsIgnoreCase(request.getMethod())) {
+            return false;
+        }
+
+        String uri = request.getRequestURI();
+        return uri.equals("/api/posts")
+                || uri.matches("^/api/posts/\\d+$")
+                || uri.matches("^/api/posts/\\d+/comments$");
     }
 }
 

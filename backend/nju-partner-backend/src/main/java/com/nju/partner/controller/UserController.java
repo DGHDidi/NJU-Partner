@@ -67,4 +67,10 @@ public class UserController {
                                                 @RequestParam(defaultValue = "10") Integer pageSize) {
         return Result.success(userService.getMyFavorites(pageNum, pageSize));
     }
+
+    @GetMapping("/my-favorites")
+    public Result<IPage<PostVO>> getMyFavoritesAlias(@RequestParam(defaultValue = "1") Integer pageNum,
+                                                     @RequestParam(defaultValue = "10") Integer pageSize) {
+        return Result.success(userService.getMyFavorites(pageNum, pageSize));
+    }
 }
