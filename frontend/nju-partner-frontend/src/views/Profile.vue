@@ -1,12 +1,15 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
-import { ElMessage } from 'element-plus'
+import { useRouter } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { cancelApplication } from '@/api/application'
 import { getProfile, updateProfile, getMyPosts, getMyApplications, getMyFavorites } from '@/api/user'
 import { APPLICATION_STATUS_MAP, POST_STATUS_MAP } from '@/constants'
 import { useUserStore } from '@/stores/user'
 import Navbar from '@/components/Navbar.vue'
 
 const userStore = useUserStore()
+const router = useRouter()
 const loading = ref(false)
 const profileForm = reactive({
   nickname: '',
@@ -52,6 +55,13 @@ async function handleSaveProfile() {
   ElMessage.success('资料更新成功')
 }
 
+async function handleCancelApplication(id) {
+  await ElMessageBox.confirm('确认取消这条报名吗？', '提示', { type: 'warning' })
+  await cancelApplication(id)
+  ElMessage.success('报名已取消')
+  await loadAll()
+}
+
 onMounted(loadAll)
 </script>
 
@@ -93,6 +103,12 @@ onMounted(loadAll)
             <el-table-column prop="status" label="状态" width="120">
               <template #default="scope">{{ POST_STATUS_MAP[scope.row.status] }}</template>
             </el-table-column>
+            <el-table-column label="操作" width="150">
+              <template #default="scope">
+                <el-button link type="primary" @click="router.push({ name: 'PostDetail', params: { id: scope.row.id } })">查看</el-button>
+                <el-button link type="primary" @click="router.push({ name: 'PostEdit', params: { id: scope.row.id } })">编辑</el-button>
+              </template>
+            </el-table-column>
           </el-table>
         </el-tab-pane>
         <el-tab-pane label="我的报名">
@@ -103,6 +119,19 @@ onMounted(loadAll)
             <el-table-column prop="status" label="状态" width="120">
               <template #default="scope">{{ APPLICATION_STATUS_MAP[scope.row.status] }}</template>
             </el-table-column>
+            <el-table-column label="操作" width="150">
+              <template #default="scope">
+                <el-button link type="primary" @click="router.push({ name: 'PostDetail', params: { id: scope.row.postId } })">查看</el-button>
+                <el-button
+                  v-if="[0, 2].includes(scope.row.status)"
+                  link
+                  type="danger"
+                  @click="handleCancelApplication(scope.row.id)"
+                >
+                  取消
+                </el-button>
+              </template>
+            </el-table-column>
           </el-table>
         </el-tab-pane>
         <el-tab-pane label="我的收藏">
@@ -112,6 +141,11 @@ onMounted(loadAll)
             <el-table-column prop="type" label="类型" width="120" />
             <el-table-column prop="status" label="状态" width="120">
               <template #default="scope">{{ POST_STATUS_MAP[scope.row.status] }}</template>
+            </el-table-column>
+            <el-table-column label="操作" width="90">
+              <template #default="scope">
+                <el-button link type="primary" @click="router.push({ name: 'PostDetail', params: { id: scope.row.id } })">查看</el-button>
+              </template>
             </el-table-column>
           </el-table>
         </el-tab-pane>

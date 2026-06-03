@@ -10,6 +10,7 @@ const filters = reactive({
   type: '',
   status: '',
   grade: '',
+  timeRange: [],
 })
 
 const statusOptions = Object.entries(POST_STATUS_MAP).map(([value, label]) => ({
@@ -27,6 +28,7 @@ function handleReset() {
   filters.type = ''
   filters.status = ''
   filters.grade = ''
+  filters.timeRange = []
   emit('search', { ...filters })
 }
 </script>
@@ -76,6 +78,16 @@ function handleReset() {
             :value="item"
           />
         </el-select>
+      </el-form-item>
+      <el-form-item label="时间">
+        <el-date-picker
+          v-model="filters.timeRange"
+          type="datetimerange"
+          range-separator="至"
+          start-placeholder="开始时间"
+          end-placeholder="结束时间"
+          value-format="YYYY-MM-DDTHH:mm:ss"
+        />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="handleSearch">筛选</el-button>

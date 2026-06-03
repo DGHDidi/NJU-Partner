@@ -31,6 +31,12 @@ const routes = [
     meta: { title: '发布组队帖', requiresAuth: true },
   },
   {
+    path: '/post/:id/edit',
+    name: 'PostEdit',
+    component: () => import('@/views/PostCreate.vue'),
+    meta: { title: '编辑组队帖', requiresAuth: true },
+  },
+  {
     path: '/post/:id',
     name: 'PostDetail',
     component: () => import('@/views/PostDetail.vue'),

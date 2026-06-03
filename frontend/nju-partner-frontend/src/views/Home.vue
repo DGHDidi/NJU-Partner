@@ -16,13 +16,20 @@ const filters = reactive({
   type: '',
   status: '',
   grade: '',
+  timeRange: [],
 })
 
 async function loadPosts() {
   loading.value = true
   try {
     const data = await getPostList({
-      ...filters,
+      keyword: filters.keyword,
+      campus: filters.campus,
+      type: filters.type,
+      status: filters.status,
+      grade: filters.grade,
+      startTime: filters.timeRange?.[0] || '',
+      endTime: filters.timeRange?.[1] || '',
       pageNum: pagination.pageNum,
       pageSize: pagination.pageSize,
     })

@@ -1,14 +1,18 @@
 <script setup>
-import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { createPost } from '@/api/post'
+import { createPost, getPostDetail, updatePost } from '@/api/post'
 import { CAMPUS_OPTIONS, POST_TYPE_OPTIONS } from '@/constants'
 import Navbar from '@/components/Navbar.vue'
 
 const router = useRouter()
+const route = useRoute()
 const formRef = ref()
 const loading = ref(false)
+const pageLoading = ref(false)
+const isEdit = computed(() => route.name === 'PostEdit')
+const postId = computed(() => Number(route.params.id))
 
 const form = reactive({
   title: '',
@@ -38,23 +42,54 @@ async function handleSubmit() {
 
   loading.value = true
   try {
-    await createPost({ ...form, activityTime: form.activityTime || null })
-    ElMessage.success('发布成功')
-    router.push({ name: 'Home' })
+    const payload = { ...form, activityTime: form.activityTime || null }
+    if (isEdit.value) {
+      await updatePost(postId.value, payload)
+      ElMessage.success('修改成功')
+      router.push({ name: 'PostDetail', params: { id: postId.value } })
+    } else {
+      await createPost(payload)
+      ElMessage.success('发布成功')
+      router.push({ name: 'Home' })
+    }
   } finally {
     loading.value = false
   }
 }
+
+async function loadPostForEdit() {
+  if (!isEdit.value || !postId.value) return
+  pageLoading.value = true
+  try {
+    const post = await getPostDetail(postId.value)
+    Object.assign(form, {
+      title: post.title || '',
+      type: post.type || '',
+      description: post.description || '',
+      location: post.location || '',
+      activityTime: post.activityTime || '',
+      needCount: post.needCount || 1,
+      campus: post.campus || '',
+      gradeLimit: post.gradeLimit || '',
+      majorLimit: post.majorLimit || '',
+      contact: post.contact || '',
+    })
+  } finally {
+    pageLoading.value = false
+  }
+}
+
+onMounted(loadPostForEdit)
 </script>
 
 <template>
   <div class="page">
     <Navbar />
 
-    <main class="page-main">
+    <main class="page-main" v-loading="pageLoading">
       <el-card>
         <template #header>
-          <h2>发布组队帖</h2>
+          <h2>{{ isEdit ? '编辑组队帖' : '发布组队帖' }}</h2>
         </template>
 
         <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
@@ -99,7 +134,9 @@ async function handleSubmit() {
             <el-input v-model="form.description" type="textarea" :rows="4" placeholder="请描述活动内容" />
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" :loading="loading" @click="handleSubmit">发布</el-button>
+            <el-button type="primary" :loading="loading" @click="handleSubmit">
+              {{ isEdit ? '保存修改' : '发布' }}
+            </el-button>
             <el-button @click="$router.back()">取消</el-button>
           </el-form-item>
         </el-form>

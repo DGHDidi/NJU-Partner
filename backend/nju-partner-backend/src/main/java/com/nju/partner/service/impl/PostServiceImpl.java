@@ -88,6 +88,12 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
                     .or()
                     .like(Post::getGradeLimit, grade));
         }
+        if (query.getStartTime() != null) {
+            wrapper.ge(Post::getActivityTime, query.getStartTime());
+        }
+        if (query.getEndTime() != null) {
+            wrapper.le(Post::getActivityTime, query.getEndTime());
+        }
         if (StringUtils.hasText(query.getKeyword())) {
             String keyword = query.getKeyword().trim();
             wrapper.and(w -> w.like(Post::getTitle, keyword)

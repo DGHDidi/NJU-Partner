@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getPostDetail, closePost } from '@/api/post'
 import { applyPost, getApplicationList, passApplication, rejectApplication } from '@/api/application'
@@ -11,6 +11,7 @@ import { useUserStore } from '@/stores/user'
 import Navbar from '@/components/Navbar.vue'
 
 const route = useRoute()
+const router = useRouter()
 const userStore = useUserStore()
 const postId = Number(route.params.id)
 
@@ -130,6 +131,7 @@ onMounted(initData)
           <el-button v-if="userStore.isLoggedIn" @click="handleToggleFavorite">
             {{ post.favorited ? '取消收藏' : '收藏' }}
           </el-button>
+          <el-button v-if="isOwner" @click="router.push({ name: 'PostEdit', params: { id: postId } })">编辑</el-button>
           <el-button v-if="canClose" type="danger" plain @click="handleClosePost">关闭招募</el-button>
         </div>
       </el-card>
