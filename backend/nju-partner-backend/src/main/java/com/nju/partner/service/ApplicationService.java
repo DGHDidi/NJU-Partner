@@ -12,6 +12,10 @@ public interface ApplicationService extends IService<Application> {
 
     List<ApplicationVO> getApplications(Long postId);
 
+    ApplicationVO getMyApplication(Long postId);
+
+    List<ApplicationVO> getApprovedMembers(Long postId);
+
     void passApplication(Long applicationId);
 
     void rejectApplication(Long applicationId);

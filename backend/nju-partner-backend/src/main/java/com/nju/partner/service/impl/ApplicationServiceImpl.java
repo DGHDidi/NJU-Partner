@@ -87,6 +87,37 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
     }
 
     @Override
+    public ApplicationVO getMyApplication(Long postId) {
+        Long userId = BaseContext.getCurrentUserId();
+        if (userId == null) {
+            throw new BusinessException(ResultCode.UNAUTHORIZED);
+        }
+        Post post = postService.getById(postId);
+        if (post == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "甯栧瓙涓嶅瓨鍦?");
+        }
+
+        Application application = this.getOne(new LambdaQueryWrapper<Application>()
+                .eq(Application::getPostId, postId)
+                .eq(Application::getUserId, userId));
+        return application == null ? null : toApplicationVO(application);
+    }
+
+    @Override
+    public List<ApplicationVO> getApprovedMembers(Long postId) {
+        Post post = postService.getById(postId);
+        if (post == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "甯栧瓙涓嶅瓨鍦?");
+        }
+
+        List<Application> applications = this.list(new LambdaQueryWrapper<Application>()
+                .eq(Application::getPostId, postId)
+                .eq(Application::getStatus, 1)
+                .orderByDesc(Application::getUpdatedTime));
+        return applications.stream().map(this::toApplicationVO).collect(Collectors.toList());
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public void passApplication(Long applicationId) {
         Application application = checkOwnershipAndGet(applicationId, true);

@@ -59,6 +59,7 @@ public class JwtInterceptor implements HandlerInterceptor {
         String uri = request.getRequestURI();
         return uri.equals("/api/posts")
                 || uri.matches("^/api/posts/\\d+$")
+                || uri.matches("^/api/posts/\\d+/members$")
                 || uri.matches("^/api/posts/\\d+/comments$");
     }
 }

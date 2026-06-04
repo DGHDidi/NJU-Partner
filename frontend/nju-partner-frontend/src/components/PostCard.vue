@@ -1,5 +1,6 @@
 <script setup>
 import { POST_STATUS_MAP } from '@/constants'
+import { formatDateTime } from '@/utils/date'
 
 defineProps({
   post: {
@@ -26,7 +27,7 @@ function handleClick() {
       <span>类型：{{ post.type || '-' }}</span>
       <span>校区：{{ post.campus || '-' }}</span>
       <span>地点：{{ post.location || '-' }}</span>
-      <span>时间：{{ post.activityTime || '-' }}</span>
+      <span>时间：{{ formatDateTime(post.activityTime) }}</span>
     </div>
 
     <p class="post-desc">{{ post.description || '帖子描述占位' }}</p>
