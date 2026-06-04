@@ -8,6 +8,7 @@ import { CAMPUS_OPTIONS, GRADE_OPTIONS } from '@/constants'
 const router = useRouter()
 const formRef = ref()
 const loading = ref(false)
+const isShaking = ref(false)
 
 const form = reactive({
   username: '',
@@ -68,9 +69,29 @@ const rules = {
   ],
 }
 
+function showValidationFeedback() {
+  ElMessage.warning('请先修正表单中的红色提示项')
+  isShaking.value = false
+  requestAnimationFrame(() => {
+    isShaking.value = true
+    window.setTimeout(() => {
+      isShaking.value = false
+    }, 420)
+  })
+
+  window.setTimeout(() => {
+    const firstError = document.querySelector('.auth-card .el-form-item.is-error input, .auth-card .el-form-item.is-error textarea')
+    firstError?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    firstError?.focus()
+  }, 80)
+}
+
 async function handleRegister() {
   const valid = await formRef.value?.validate().catch(() => false)
-  if (!valid) return
+  if (!valid) {
+    showValidationFeedback()
+    return
+  }
 
   loading.value = true
   try {
@@ -92,7 +113,7 @@ async function handleRegister() {
 
 <template>
   <div class="page page-auth">
-    <el-card class="auth-card">
+    <el-card class="auth-card" :class="{ 'is-shaking': isShaking }">
       <template #header>
         <h2>注册</h2>
         <p class="subtitle">加入南大轻搭子，找到你的校园搭子</p>
@@ -176,6 +197,10 @@ async function handleRegister() {
   width: 480px;
 }
 
+.auth-card.is-shaking {
+  animation: form-shake 0.42s ease;
+}
+
 .auth-card h2 {
   margin: 0;
   text-align: center;
@@ -187,5 +212,22 @@ async function handleRegister() {
   text-align: center;
   font-size: 13px;
   color: #909399;
+}
+
+@keyframes form-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  20%,
+  60% {
+    transform: translateX(-8px);
+  }
+
+  40%,
+  80% {
+    transform: translateX(8px);
+  }
 }
 </style>
