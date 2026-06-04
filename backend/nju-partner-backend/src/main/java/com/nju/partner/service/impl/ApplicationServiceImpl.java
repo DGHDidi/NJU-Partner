@@ -150,17 +150,16 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
         long approvedCount = this.count(new LambdaQueryWrapper<Application>()
                 .eq(Application::getPostId, post.getId())
                 .eq(Application::getStatus, 1));
-        int currentCount = (int) approvedCount + 1;
-        if (post.getNeedCount() != null && currentCount >= post.getNeedCount()) {
+        if (post.getNeedCount() != null && approvedCount >= post.getNeedCount()) {
             throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "帖子人数已满");
         }
 
         application.setStatus(1);
         this.updateById(application);
 
-        int newCount = currentCount + 1;
+        int newCount = (int) approvedCount + 2;
         post.setCurrentCount(newCount);
-        if (newCount >= post.getNeedCount()) {
+        if (post.getNeedCount() != null && newCount >= post.getNeedCount() + 1) {
             post.setStatus(1);
         }
         postService.updateById(post);

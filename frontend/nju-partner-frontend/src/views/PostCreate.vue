@@ -31,9 +31,29 @@ const rules = {
   title: [{ required: true, message: '请输入标题', trigger: 'blur' }],
   type: [{ required: true, message: '请选择活动类型', trigger: 'change' }],
   description: [{ required: true, message: '请输入活动描述', trigger: 'blur' }],
-  activityTime: [{ required: true, message: '请选择活动时间', trigger: 'change' }],
+  activityTime: [
+    { required: true, message: '请选择活动时间', trigger: 'change' },
+    {
+      validator: (_rule, value, callback) => {
+        if (!value || new Date(value).getTime() > Date.now()) {
+          callback()
+          return
+        }
+        callback(new Error('活动时间必须晚于当前时间'))
+      },
+      trigger: 'change',
+    },
+  ],
   needCount: [{ required: true, message: '请输入人数', trigger: 'change' }],
   campus: [{ required: true, message: '请选择校区', trigger: 'change' }],
+}
+
+const pickerOptions = {
+  disabledDate(date) {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return date.getTime() < today.getTime()
+  },
 }
 
 async function handleSubmit() {
@@ -139,11 +159,15 @@ onMounted(loadPostForEdit)
               type="datetime"
               value-format="YYYY-MM-DDTHH:mm:ss"
               placeholder="请选择时间"
+              :disabled-date="pickerOptions.disabledDate"
               style="width: 100%"
             />
           </el-form-item>
           <el-form-item label="需要人数" prop="needCount" required>
-            <el-input-number v-model="form.needCount" :min="1" />
+            <div class="need-count-field">
+              <el-input-number v-model="form.needCount" :min="1" />
+              <span class="field-tip">除你自己以外还需要的人数，页面会显示为总人数 {{ form.needCount + 1 }} 人</span>
+            </div>
           </el-form-item>
           <el-form-item label="年级限制">
             <div class="grade-tags">
@@ -196,5 +220,17 @@ h2 {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.need-count-field {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.field-tip {
+  color: #909399;
+  font-size: 12px;
 }
 </style>

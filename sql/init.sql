@@ -41,7 +41,7 @@ CREATE TABLE `post` (
     description TEXT COMMENT '活动描述',
     location VARCHAR(100) COMMENT '具体地点',
     activity_time DATETIME COMMENT '活动时间',
-    need_count INT NOT NULL COMMENT '需要人数',
+    need_count INT NOT NULL COMMENT '除楼主外还需要的人数',
     current_count INT DEFAULT 1 COMMENT '当前已报名成员数（含楼主）',
     campus VARCHAR(50) COMMENT '活动校区',
     grade_limit VARCHAR(50) COMMENT '年级限制',

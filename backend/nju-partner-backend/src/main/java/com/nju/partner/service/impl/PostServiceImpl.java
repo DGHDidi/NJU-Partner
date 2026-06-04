@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +49,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         if (userId == null) {
             throw new BusinessException(ResultCode.UNAUTHORIZED);
         }
+        validatePostPayload(dto);
 
         Post post = new Post();
         post.setUserId(userId);
@@ -125,6 +127,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     @Transactional(rollbackFor = Exception.class)
     public void updatePost(Long postId, PostCreateDTO dto) {
         Post post = checkOwner(postId);
+        validatePostPayload(dto);
 
         post.setTitle(dto.getTitle().trim());
         post.setType(dto.getType().trim());
@@ -237,5 +240,11 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
                 .eq(Application::getPostId, post.getId())
                 .eq(Application::getStatus, 1));
         return approvedCount.intValue() + 1;
+    }
+
+    private void validatePostPayload(PostCreateDTO dto) {
+        if (dto.getActivityTime() != null && !dto.getActivityTime().isAfter(LocalDateTime.now())) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "活动时间必须晚于当前时间");
+        }
     }
 }

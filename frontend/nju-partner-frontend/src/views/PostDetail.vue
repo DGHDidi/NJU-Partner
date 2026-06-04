@@ -234,7 +234,7 @@ watch(
           <el-descriptions-item label="活动校区">{{ post.campus || '-' }}</el-descriptions-item>
           <el-descriptions-item label="具体地点">{{ post.location || '-' }}</el-descriptions-item>
           <el-descriptions-item label="活动时间">{{ formatDateTime(post.activityTime) }}</el-descriptions-item>
-          <el-descriptions-item label="人数">{{ post.currentCount }} / {{ post.needCount }}</el-descriptions-item>
+          <el-descriptions-item label="人数">{{ post.currentCount }} / {{ post.needCount + 1 }}</el-descriptions-item>
           <el-descriptions-item label="联系方式">{{ post.contact || '-' }}</el-descriptions-item>
           <el-descriptions-item label="活动描述">{{ post.description || '-' }}</el-descriptions-item>
         </el-descriptions>
