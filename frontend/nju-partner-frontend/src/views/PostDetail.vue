@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getPostDetail, closePost } from '@/api/post'
@@ -14,7 +14,7 @@ import Navbar from '@/components/Navbar.vue'
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
-const postId = Number(route.params.id)
+const postId = computed(() => Number(route.params.id))
 
 const post = ref(null)
 const comments = ref([])
@@ -92,19 +92,19 @@ function findRootCommentId(commentId, commentMap) {
 async function loadDetail() {
   loading.value = true
   try {
-    post.value = await getPostDetail(postId)
+    post.value = await getPostDetail(postId.value)
   } finally {
     loading.value = false
   }
 }
 
 async function loadComments() {
-  comments.value = await getCommentList(postId)
+  comments.value = await getCommentList(postId.value)
 }
 
 async function loadApplications() {
   if (!isOwner.value) return
-  applications.value = await getApplicationList(postId)
+  applications.value = await getApplicationList(postId.value)
 }
 
 async function loadMyApplication() {
@@ -112,14 +112,17 @@ async function loadMyApplication() {
     myApplication.value = null
     return
   }
-  myApplication.value = await getMyApplication(postId)
+  myApplication.value = await getMyApplication(postId.value)
 }
 
 async function loadApprovedMembers() {
-  approvedMembers.value = await getApprovedMembers(postId)
+  approvedMembers.value = await getApprovedMembers(postId.value)
 }
 
 async function initData() {
+  replyToComment.value = null
+  commentContent.value = ''
+  applyMessage.value = ''
   await loadDetail()
   await Promise.all([loadComments(), loadApplications(), loadMyApplication(), loadApprovedMembers()])
 }
@@ -127,7 +130,7 @@ async function initData() {
 async function handleApply() {
   applying.value = true
   try {
-    await applyPost(postId, { message: applyMessage.value.trim() })
+    await applyPost(postId.value, { message: applyMessage.value.trim() })
     ElMessage.success('报名成功')
     applyMessage.value = ''
     applyDialogVisible.value = false
@@ -158,7 +161,7 @@ async function handleReject(id) {
 
 async function handleClosePost() {
   await ElMessageBox.confirm('确认关闭该帖子招募吗？', '提示', { type: 'warning' })
-  await closePost(postId)
+  await closePost(postId.value)
   ElMessage.success('帖子已关闭')
   await loadDetail()
 }
@@ -166,7 +169,7 @@ async function handleClosePost() {
 async function handleCreateComment() {
   if (!commentContent.value.trim()) return
   const isReply = !!replyToComment.value
-  await createComment(postId, {
+  await createComment(postId.value, {
     content: commentContent.value.trim(),
     parentId: replyToComment.value?.id || null,
   })
@@ -196,16 +199,23 @@ async function handleDeleteComment(id) {
 
 async function handleToggleFavorite() {
   if (post.value?.favorited) {
-    await removeFavorite(postId)
+    await removeFavorite(postId.value)
     ElMessage.success('已取消收藏')
   } else {
-    await addFavorite(postId)
+    await addFavorite(postId.value)
     ElMessage.success('已收藏')
   }
   await loadDetail()
 }
 
 onMounted(initData)
+
+watch(
+  () => route.params.id,
+  () => {
+    initData()
+  },
+)
 </script>
 
 <template>
