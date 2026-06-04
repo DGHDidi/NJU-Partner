@@ -11,6 +11,7 @@ CREATE DATABASE IF NOT EXISTS nju_partner
 USE nju_partner;
 
 DROP TABLE IF EXISTS `favorite`;
+DROP TABLE IF EXISTS `notification`;
 DROP TABLE IF EXISTS `comment`;
 DROP TABLE IF EXISTS `application`;
 DROP TABLE IF EXISTS `post`;
@@ -41,7 +42,7 @@ CREATE TABLE `post` (
     location VARCHAR(100) COMMENT '具体地点',
     activity_time DATETIME COMMENT '活动时间',
     need_count INT NOT NULL COMMENT '需要人数',
-    current_count INT DEFAULT 0 COMMENT '当前已通过人数',
+    current_count INT DEFAULT 1 COMMENT '当前已报名成员数（含楼主）',
     campus VARCHAR(50) COMMENT '活动校区',
     grade_limit VARCHAR(50) COMMENT '年级限制',
     major_limit VARCHAR(100) COMMENT '专业限制',
@@ -71,12 +72,30 @@ CREATE TABLE `comment` (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     post_id BIGINT NOT NULL COMMENT '帖子 ID',
     user_id BIGINT NOT NULL COMMENT '评论用户 ID',
+    parent_id BIGINT NULL COMMENT '父评论 ID',
+    reply_to_user_id BIGINT NULL COMMENT '被回复用户 ID',
     content VARCHAR(500) NOT NULL COMMENT '评论内容',
     status INT DEFAULT 1 COMMENT '状态：1 正常，0 删除',
     created_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     INDEX idx_comment_post_id (post_id),
-    INDEX idx_comment_user_id (user_id)
+    INDEX idx_comment_user_id (user_id),
+    INDEX idx_comment_parent_id (parent_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='评论表';
+
+CREATE TABLE `notification` (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL COMMENT '接收用户 ID',
+    type VARCHAR(50) NOT NULL COMMENT '通知类型',
+    title VARCHAR(100) NOT NULL COMMENT '通知标题',
+    content VARCHAR(255) NOT NULL COMMENT '通知内容',
+    post_id BIGINT NULL COMMENT '关联帖子 ID',
+    comment_id BIGINT NULL COMMENT '关联评论 ID',
+    application_id BIGINT NULL COMMENT '关联报名 ID',
+    is_read INT DEFAULT 0 COMMENT '是否已读：0 未读，1 已读',
+    created_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    INDEX idx_notification_user_read (user_id, is_read),
+    INDEX idx_notification_created_time (created_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='站内通知表';
 
 CREATE TABLE `favorite` (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
