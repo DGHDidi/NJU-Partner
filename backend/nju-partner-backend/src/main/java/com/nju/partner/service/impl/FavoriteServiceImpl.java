@@ -12,8 +12,8 @@ import com.nju.partner.entity.User;
 import com.nju.partner.exception.BusinessException;
 import com.nju.partner.mapper.FavoriteMapper;
 import com.nju.partner.mapper.PostMapper;
+import com.nju.partner.mapper.UserMapper;
 import com.nju.partner.service.FavoriteService;
-import com.nju.partner.service.UserService;
 import com.nju.partner.vo.PostVO;
 import com.nju.partner.vo.UserVO;
 import org.springframework.stereotype.Service;
@@ -30,11 +30,11 @@ import java.util.stream.Collectors;
 public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> implements FavoriteService {
 
     private final PostMapper postMapper;
-    private final UserService userService;
+    private final UserMapper userMapper;
 
-    public FavoriteServiceImpl(PostMapper postMapper, UserService userService) {
+    public FavoriteServiceImpl(PostMapper postMapper, UserMapper userMapper) {
         this.postMapper = postMapper;
-        this.userService = userService;
+        this.userMapper = userMapper;
     }
 
     @Override
@@ -86,7 +86,7 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
         List<Post> posts = postMapper.selectList(new LambdaQueryWrapper<Post>().in(Post::getId, postIds));
         Map<Long, Post> postMap = posts.stream().collect(Collectors.toMap(Post::getId, item -> item));
         List<Long> userIds = posts.stream().map(Post::getUserId).distinct().toList();
-        Map<Long, User> userMap = userService.listByIds(userIds).stream()
+        Map<Long, User> userMap = userIds.isEmpty() ? Collections.emptyMap() : userMapper.selectBatchIds(userIds).stream()
                 .collect(Collectors.toMap(User::getId, item -> item));
 
         List<PostVO> records = postIds.stream()
