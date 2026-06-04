@@ -61,6 +61,33 @@ const applyDisabledText = computed(() => {
   return post.value.status === 1 ? '已成团，无法报名' : '已关闭，无法报名'
 })
 const replyTargetName = computed(() => replyToComment.value?.user?.nickname || replyToComment.value?.user?.username || '')
+const threadedComments = computed(() => {
+  const commentMap = new Map(comments.value.map((item) => [item.id, { ...item, replies: [] }]))
+  const roots = []
+
+  commentMap.forEach((item) => {
+    const parent = item.parentId ? commentMap.get(findRootCommentId(item.parentId, commentMap)) : null
+    if (parent) {
+      parent.replies.push(item)
+    } else {
+      roots.push(item)
+    }
+  })
+
+  roots.forEach((item) => {
+    item.replies.sort((a, b) => new Date(a.createdTime) - new Date(b.createdTime))
+  })
+
+  return roots
+})
+
+function findRootCommentId(commentId, commentMap) {
+  let current = commentMap.get(commentId)
+  while (current?.parentId && commentMap.has(current.parentId)) {
+    current = commentMap.get(current.parentId)
+  }
+  return current?.id || commentId
+}
 
 async function loadDetail() {
   loading.value = true
@@ -157,6 +184,10 @@ function handleCancelReply() {
   replyToComment.value = null
 }
 
+function canDeleteComment(comment) {
+  return currentUserId.value === comment.userId || userStore.isAdmin
+}
+
 async function handleDeleteComment(id) {
   await deleteComment(id)
   ElMessage.success('评论已删除')
@@ -226,40 +257,6 @@ onMounted(initData)
         </div>
       </el-card>
 
-      <el-card class="section">
-        <template #header>评论列表</template>
-
-        <div class="comment-create" v-if="userStore.isLoggedIn">
-          <div v-if="replyToComment" class="reply-target">
-            正在回复 @{{ replyTargetName }}
-            <el-button link type="primary" @click="handleCancelReply">取消回复</el-button>
-          </div>
-          <el-input v-model="commentContent" :placeholder="replyToComment ? `回复 @${replyTargetName}` : '输入评论内容'" />
-          <el-button type="primary" @click="handleCreateComment">{{ replyToComment ? '发表回复' : '发表评论' }}</el-button>
-        </div>
-
-        <el-empty v-if="comments.length === 0" description="暂无评论" />
-        <div v-for="item in comments" :key="item.id" class="comment-item" :class="{ reply: item.parentId }">
-          <div>
-            <strong>{{ item.user?.nickname || item.user?.username || '匿名用户' }}</strong>
-            <span v-if="item.replyToUser" class="reply-label">回复 @{{ item.replyToUser.nickname || item.replyToUser.username }}</span>
-            <span class="comment-time">{{ formatDateTime(item.createdTime) }}</span>
-          </div>
-          <div>{{ item.content }}</div>
-          <div class="comment-actions">
-            <el-button v-if="userStore.isLoggedIn" type="primary" link @click="handleReplyComment(item)">回复</el-button>
-            <el-button
-              v-if="currentUserId === item.userId || userStore.isAdmin"
-              type="danger"
-              link
-              @click="handleDeleteComment(item.id)"
-            >
-              删除
-            </el-button>
-          </div>
-        </div>
-      </el-card>
-
       <el-dialog v-model="applyDialogVisible" title="确认报名" width="420px" destroy-on-close>
         <el-input
           v-model="applyMessage"
@@ -297,6 +294,65 @@ onMounted(initData)
             </template>
           </el-table-column>
         </el-table>
+      </el-card>
+
+      <el-card class="section">
+        <template #header>评论列表</template>
+
+        <div class="comment-create" v-if="userStore.isLoggedIn">
+          <div v-if="replyToComment" class="reply-target">
+            正在回复 @{{ replyTargetName }}
+            <el-button link type="primary" @click="handleCancelReply">取消回复</el-button>
+          </div>
+          <el-input v-model="commentContent" :placeholder="replyToComment ? `回复 @${replyTargetName}` : '输入评论内容'" />
+          <el-button type="primary" @click="handleCreateComment">{{ replyToComment ? '发表回复' : '发表评论' }}</el-button>
+        </div>
+
+        <el-empty v-if="comments.length === 0" description="暂无评论" />
+        <div v-for="item in threadedComments" :key="item.id" class="comment-thread">
+          <div class="comment-item">
+            <div>
+              <strong>{{ item.user?.nickname || item.user?.username || '匿名用户' }}</strong>
+              <el-tag v-if="post?.userId === item.userId" size="small" type="success">楼主</el-tag>
+              <span class="comment-time">{{ formatDateTime(item.createdTime) }}</span>
+            </div>
+            <div>{{ item.content }}</div>
+            <div class="comment-actions">
+              <el-button v-if="userStore.isLoggedIn" type="primary" link @click="handleReplyComment(item)">回复</el-button>
+              <el-button
+                v-if="canDeleteComment(item)"
+                type="danger"
+                link
+                @click="handleDeleteComment(item.id)"
+              >
+                删除
+              </el-button>
+            </div>
+          </div>
+
+          <div v-if="item.replies.length" class="reply-list">
+            <div v-for="reply in item.replies" :key="reply.id" class="comment-item reply">
+              <div>
+                <strong>{{ reply.user?.nickname || reply.user?.username || '匿名用户' }}</strong>
+                <el-tag v-if="post?.userId === reply.userId" size="small" type="success">楼主</el-tag>
+                <span v-if="reply.replyToUser" class="reply-label">回复 @{{ reply.replyToUser.nickname || reply.replyToUser.username }}</span>
+                <span class="comment-time">{{ formatDateTime(reply.createdTime) }}</span>
+              </div>
+              <div>{{ reply.content }}</div>
+              <div class="comment-actions">
+                <el-button v-if="userStore.isLoggedIn" type="primary" link @click="handleReplyComment(reply)">回复</el-button>
+                <el-button
+                  v-if="canDeleteComment(reply)"
+                  type="danger"
+                  link
+                  @click="handleDeleteComment(reply.id)"
+                >
+                  删除
+                </el-button>
+              </div>
+            </div>
+          </div>
+        </div>
       </el-card>
     </main>
   </div>
@@ -339,15 +395,23 @@ onMounted(initData)
   font-size: 13px;
 }
 
-.comment-item {
-  padding: 10px 0;
+.comment-thread {
   border-bottom: 1px solid #f0f0f0;
 }
 
-.comment-item.reply {
+.comment-item {
+  padding: 10px 0;
+}
+
+.reply-list {
   margin-left: 24px;
+  margin-bottom: 8px;
   padding-left: 12px;
   border-left: 3px solid #d9ecff;
+}
+
+.comment-item.reply {
+  padding: 8px 0;
 }
 
 .comment-actions {

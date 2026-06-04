@@ -3,7 +3,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { createPost, getPostDetail, updatePost } from '@/api/post'
-import { CAMPUS_OPTIONS, POST_TYPE_OPTIONS } from '@/constants'
+import { CAMPUS_OPTIONS, GRADE_OPTIONS, POST_TYPE_OPTIONS } from '@/constants'
 import Navbar from '@/components/Navbar.vue'
 
 const router = useRouter()
@@ -22,7 +22,7 @@ const form = reactive({
   activityTime: '',
   needCount: 1,
   campus: '',
-  gradeLimit: '',
+  gradeLimit: [],
   majorLimit: '',
   contact: '',
 })
@@ -42,7 +42,11 @@ async function handleSubmit() {
 
   loading.value = true
   try {
-    const payload = { ...form, activityTime: form.activityTime || null }
+    const payload = {
+      ...form,
+      activityTime: form.activityTime || null,
+      gradeLimit: form.gradeLimit.length ? form.gradeLimit.join(',') : '',
+    }
     if (isEdit.value) {
       await updatePost(postId.value, payload)
       ElMessage.success('修改成功')
@@ -70,13 +74,33 @@ async function loadPostForEdit() {
       activityTime: post.activityTime || '',
       needCount: post.needCount || 1,
       campus: post.campus || '',
-      gradeLimit: post.gradeLimit || '',
+      gradeLimit: parseGradeLimit(post.gradeLimit),
       majorLimit: post.majorLimit || '',
       contact: post.contact || '',
     })
   } finally {
     pageLoading.value = false
   }
+}
+
+function parseGradeLimit(value) {
+  if (!value || value === '不限') {
+    return []
+  }
+  return value.split(',').map((item) => item.trim()).filter(Boolean)
+}
+
+function toggleGrade(grade) {
+  const index = form.gradeLimit.indexOf(grade)
+  if (index >= 0) {
+    form.gradeLimit.splice(index, 1)
+  } else {
+    form.gradeLimit.push(grade)
+  }
+}
+
+function clearGradeLimit() {
+  form.gradeLimit = []
 }
 
 onMounted(loadPostForEdit)
@@ -122,7 +146,19 @@ onMounted(loadPostForEdit)
             <el-input-number v-model="form.needCount" :min="1" />
           </el-form-item>
           <el-form-item label="年级限制">
-            <el-input v-model="form.gradeLimit" placeholder="不限" />
+            <div class="grade-tags">
+              <el-check-tag :checked="form.gradeLimit.length === 0" @change="clearGradeLimit">
+                不限
+              </el-check-tag>
+              <el-check-tag
+                v-for="item in GRADE_OPTIONS"
+                :key="item"
+                :checked="form.gradeLimit.includes(item)"
+                @change="toggleGrade(item)"
+              >
+                {{ item }}
+              </el-check-tag>
+            </div>
           </el-form-item>
           <el-form-item label="专业限制">
             <el-input v-model="form.majorLimit" placeholder="不限" />
@@ -154,5 +190,11 @@ onMounted(loadPostForEdit)
 
 h2 {
   margin: 0;
+}
+
+.grade-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 </style>
