@@ -8,8 +8,10 @@ import com.nju.partner.common.BaseContext;
 import com.nju.partner.common.ResultCode;
 import com.nju.partner.dto.PostCreateDTO;
 import com.nju.partner.dto.PostQueryDTO;
+import com.nju.partner.entity.Application;
 import com.nju.partner.entity.Post;
 import com.nju.partner.entity.User;
+import com.nju.partner.mapper.ApplicationMapper;
 import com.nju.partner.exception.BusinessException;
 import com.nju.partner.mapper.PostMapper;
 import com.nju.partner.service.FavoriteService;
@@ -31,10 +33,12 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     private final UserService userService;
     private final FavoriteService favoriteService;
+    private final ApplicationMapper applicationMapper;
 
-    public PostServiceImpl(UserService userService, FavoriteService favoriteService) {
+    public PostServiceImpl(UserService userService, FavoriteService favoriteService, ApplicationMapper applicationMapper) {
         this.userService = userService;
         this.favoriteService = favoriteService;
+        this.applicationMapper = applicationMapper;
     }
 
     @Override
@@ -53,7 +57,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         post.setLocation(dto.getLocation());
         post.setActivityTime(dto.getActivityTime());
         post.setNeedCount(dto.getNeedCount());
-        post.setCurrentCount(0);
+        post.setCurrentCount(1);
         post.setCampus(dto.getCampus().trim());
         post.setGradeLimit(dto.getGradeLimit());
         post.setMajorLimit(dto.getMajorLimit());
@@ -191,7 +195,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         vo.setLocation(post.getLocation());
         vo.setActivityTime(post.getActivityTime());
         vo.setNeedCount(post.getNeedCount());
-        vo.setCurrentCount(post.getCurrentCount());
+        vo.setCurrentCount(resolveCurrentCount(post));
         vo.setCampus(post.getCampus());
         vo.setGradeLimit(post.getGradeLimit());
         vo.setMajorLimit(post.getMajorLimit());
@@ -226,5 +230,12 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         }
 
         return vo;
+    }
+
+    private int resolveCurrentCount(Post post) {
+        Long approvedCount = applicationMapper.selectCount(new LambdaQueryWrapper<Application>()
+                .eq(Application::getPostId, post.getId())
+                .eq(Application::getStatus, 1));
+        return approvedCount.intValue() + 1;
     }
 }

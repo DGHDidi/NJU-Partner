@@ -27,7 +27,7 @@ public class CommentController {
 
     @PostMapping("/posts/{id}/comments")
     public Result<Void> createComment(@PathVariable Long id, @Valid @RequestBody CommentCreateDTO dto) {
-        commentService.createComment(id, dto.getContent());
+        commentService.createComment(id, dto.getContent(), dto.getParentId());
         return Result.success();
     }
 

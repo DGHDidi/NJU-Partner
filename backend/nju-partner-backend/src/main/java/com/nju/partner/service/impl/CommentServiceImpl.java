@@ -13,6 +13,7 @@ import com.nju.partner.exception.BusinessException;
 import com.nju.partner.mapper.CommentMapper;
 import com.nju.partner.mapper.PostMapper;
 import com.nju.partner.service.CommentService;
+import com.nju.partner.service.NotificationService;
 import com.nju.partner.service.UserService;
 import com.nju.partner.vo.CommentVO;
 import com.nju.partner.vo.UserVO;
@@ -30,27 +31,52 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
     private final PostMapper postMapper;
     private final UserService userService;
+    private final NotificationService notificationService;
 
-    public CommentServiceImpl(PostMapper postMapper, UserService userService) {
+    public CommentServiceImpl(PostMapper postMapper, UserService userService, NotificationService notificationService) {
         this.postMapper = postMapper;
         this.userService = userService;
+        this.notificationService = notificationService;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void createComment(Long postId, String content) {
+    public void createComment(Long postId, String content, Long parentId) {
         Long userId = currentUserId();
         Post post = postMapper.selectById(postId);
         if (post == null) {
             throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "帖子不存在");
         }
 
+        Comment parent = null;
+        if (parentId != null) {
+            parent = this.getById(parentId);
+            if (parent == null || parent.getStatus() == 0 || !parent.getPostId().equals(postId)) {
+                throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "回复的评论不存在");
+            }
+        }
+
         Comment comment = new Comment();
         comment.setPostId(postId);
         comment.setUserId(userId);
+        comment.setParentId(parent == null ? null : parent.getId());
+        comment.setReplyToUserId(parent == null ? null : parent.getUserId());
         comment.setContent(content.trim());
         comment.setStatus(1);
         this.save(comment);
+
+        if (parent != null && !parent.getUserId().equals(userId)) {
+            User user = userService.getById(userId);
+            String nickname = user == null ? "有人" : displayName(user);
+            notificationService.createNotification(
+                    parent.getUserId(),
+                    "COMMENT_REPLIED",
+                    "评论收到回复",
+                    nickname + " 回复了你在《" + post.getTitle() + "》下的评论",
+                    postId,
+                    comment.getId(),
+                    null);
+        }
     }
 
     @Override
@@ -102,7 +128,11 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     }
 
     private List<CommentVO> toCommentVOList(List<Comment> comments) {
-        List<Long> userIds = comments.stream().map(Comment::getUserId).distinct().toList();
+        List<Long> userIds = comments.stream()
+                .flatMap(item -> java.util.stream.Stream.of(item.getUserId(), item.getReplyToUserId()))
+                .filter(id -> id != null)
+                .distinct()
+                .toList();
         Map<Long, User> userMap = userIds.isEmpty() ? Collections.emptyMap() :
                 userService.listByIds(userIds).stream().collect(Collectors.toMap(User::getId, item -> item));
         List<Long> postIds = comments.stream().map(Comment::getPostId).distinct().toList();
@@ -116,23 +146,20 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         vo.setId(comment.getId());
         vo.setPostId(comment.getPostId());
         vo.setUserId(comment.getUserId());
+        vo.setParentId(comment.getParentId());
+        vo.setReplyToUserId(comment.getReplyToUserId());
         vo.setContent(comment.getContent());
         vo.setStatus(comment.getStatus());
         vo.setCreatedTime(comment.getCreatedTime());
 
         User user = userMap.get(comment.getUserId());
         if (user != null) {
-            UserVO userVO = new UserVO();
-            userVO.setId(user.getId());
-            userVO.setUsername(user.getUsername());
-            userVO.setNickname(user.getNickname());
-            userVO.setAvatar(user.getAvatar());
-            userVO.setCampus(user.getCampus());
-            userVO.setGrade(user.getGrade());
-            userVO.setMajor(user.getMajor());
-            userVO.setRole(user.getRole());
-            userVO.setStatus(user.getStatus());
-            vo.setUser(userVO);
+            vo.setUser(toUserVO(user));
+        }
+
+        User replyToUser = comment.getReplyToUserId() == null ? null : userMap.get(comment.getReplyToUserId());
+        if (replyToUser != null) {
+            vo.setReplyToUser(toUserVO(replyToUser));
         }
 
         Post post = postMap.get(comment.getPostId());
@@ -140,6 +167,24 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             vo.setPostTitle(post.getTitle());
         }
         return vo;
+    }
+
+    private UserVO toUserVO(User user) {
+        UserVO userVO = new UserVO();
+        userVO.setId(user.getId());
+        userVO.setUsername(user.getUsername());
+        userVO.setNickname(user.getNickname());
+        userVO.setAvatar(user.getAvatar());
+        userVO.setCampus(user.getCampus());
+        userVO.setGrade(user.getGrade());
+        userVO.setMajor(user.getMajor());
+        userVO.setRole(user.getRole());
+        userVO.setStatus(user.getStatus());
+        return userVO;
+    }
+
+    private String displayName(User user) {
+        return StringUtils.hasText(user.getNickname()) ? user.getNickname() : user.getUsername();
     }
 
     private Long currentUserId() {

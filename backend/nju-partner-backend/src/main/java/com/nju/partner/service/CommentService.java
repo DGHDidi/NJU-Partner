@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface CommentService extends IService<Comment> {
 
-    void createComment(Long postId, String content);
+    void createComment(Long postId, String content, Long parentId);
 
     List<CommentVO> getPostComments(Long postId);
 

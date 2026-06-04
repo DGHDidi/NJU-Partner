@@ -22,6 +22,7 @@ const applications = ref([])
 const approvedMembers = ref([])
 const myApplication = ref(null)
 const commentContent = ref('')
+const replyToComment = ref(null)
 const applyMessage = ref('')
 const loading = ref(false)
 const applyDialogVisible = ref(false)
@@ -34,9 +35,7 @@ const canCancelApplication = computed(() => myApplication.value && [0, 2].includ
 const canApply = computed(() => userStore.isLoggedIn && !isOwner.value && post.value?.status === 0 && !hasActiveApplication.value)
 const canClose = computed(() => isOwner.value && post.value?.status === 0)
 const enrolledMembers = computed(() => {
-  if (!post.value?.publisher) {
-    return []
-  }
+  if (!post.value?.publisher) return []
 
   const owner = {
     id: `owner-${post.value.userId}`,
@@ -54,17 +53,14 @@ const enrolledMembers = computed(() => {
   return [owner, ...members]
 })
 const applyDisabledText = computed(() => {
-  if (!userStore.isLoggedIn || isOwner.value || !post.value || canApply.value) {
-    return ''
-  }
+  if (!userStore.isLoggedIn || isOwner.value || !post.value || canApply.value) return ''
   if (hasActiveApplication.value) {
     return `报名状态：${APPLICATION_STATUS_MAP[myApplication.value.status] || '-'}`
   }
-  if (post.value.status === 0) {
-    return ''
-  }
+  if (post.value.status === 0) return ''
   return post.value.status === 1 ? '已成团，无法报名' : '已关闭，无法报名'
 })
+const replyTargetName = computed(() => replyToComment.value?.user?.nickname || replyToComment.value?.user?.username || '')
 
 async function loadDetail() {
   loading.value = true
@@ -142,10 +138,23 @@ async function handleClosePost() {
 
 async function handleCreateComment() {
   if (!commentContent.value.trim()) return
-  await createComment(postId, { content: commentContent.value.trim() })
+  const isReply = !!replyToComment.value
+  await createComment(postId, {
+    content: commentContent.value.trim(),
+    parentId: replyToComment.value?.id || null,
+  })
   commentContent.value = ''
-  ElMessage.success('评论成功')
+  replyToComment.value = null
+  ElMessage.success(isReply ? '回复成功' : '评论成功')
   await loadComments()
+}
+
+function handleReplyComment(comment) {
+  replyToComment.value = comment
+}
+
+function handleCancelReply() {
+  replyToComment.value = null
 }
 
 async function handleDeleteComment(id) {
@@ -221,34 +230,37 @@ onMounted(initData)
         <template #header>评论列表</template>
 
         <div class="comment-create" v-if="userStore.isLoggedIn">
-          <el-input v-model="commentContent" placeholder="输入评论内容" />
-          <el-button type="primary" @click="handleCreateComment">发表评论</el-button>
+          <div v-if="replyToComment" class="reply-target">
+            正在回复 @{{ replyTargetName }}
+            <el-button link type="primary" @click="handleCancelReply">取消回复</el-button>
+          </div>
+          <el-input v-model="commentContent" :placeholder="replyToComment ? `回复 @${replyTargetName}` : '输入评论内容'" />
+          <el-button type="primary" @click="handleCreateComment">{{ replyToComment ? '发表回复' : '发表评论' }}</el-button>
         </div>
 
         <el-empty v-if="comments.length === 0" description="暂无评论" />
-        <div v-for="item in comments" :key="item.id" class="comment-item">
+        <div v-for="item in comments" :key="item.id" class="comment-item" :class="{ reply: item.parentId }">
           <div>
             <strong>{{ item.user?.nickname || item.user?.username || '匿名用户' }}</strong>
+            <span v-if="item.replyToUser" class="reply-label">回复 @{{ item.replyToUser.nickname || item.replyToUser.username }}</span>
             <span class="comment-time">{{ formatDateTime(item.createdTime) }}</span>
           </div>
           <div>{{ item.content }}</div>
-          <el-button
-            v-if="currentUserId === item.userId || userStore.isAdmin"
-            type="danger"
-            link
-            @click="handleDeleteComment(item.id)"
-          >
-            删除
-          </el-button>
+          <div class="comment-actions">
+            <el-button v-if="userStore.isLoggedIn" type="primary" link @click="handleReplyComment(item)">回复</el-button>
+            <el-button
+              v-if="currentUserId === item.userId || userStore.isAdmin"
+              type="danger"
+              link
+              @click="handleDeleteComment(item.id)"
+            >
+              删除
+            </el-button>
+          </div>
         </div>
       </el-card>
 
-      <el-dialog
-        v-model="applyDialogVisible"
-        title="确认报名"
-        width="420px"
-        destroy-on-close
-      >
+      <el-dialog v-model="applyDialogVisible" title="确认报名" width="420px" destroy-on-close>
         <el-input
           v-model="applyMessage"
           type="textarea"
@@ -301,22 +313,52 @@ onMounted(initData)
   margin-bottom: 16px;
 }
 
-.actions {
-  margin-top: 16px;
+.actions,
+.comment-create {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
 }
 
+.actions {
+  margin-top: 16px;
+}
+
 .comment-create {
-  display: flex;
-  gap: 8px;
   margin-bottom: 12px;
+}
+
+.comment-create .el-input {
+  flex: 1;
+  min-width: 260px;
+}
+
+.reply-target {
+  flex-basis: 100%;
+  color: #606266;
+  font-size: 13px;
 }
 
 .comment-item {
   padding: 10px 0;
   border-bottom: 1px solid #f0f0f0;
+}
+
+.comment-item.reply {
+  margin-left: 24px;
+  padding-left: 12px;
+  border-left: 3px solid #d9ecff;
+}
+
+.comment-actions {
+  margin-top: 4px;
+}
+
+.reply-label,
+.comment-time {
+  margin-left: 8px;
+  color: #909399;
+  font-size: 12px;
 }
 
 .member-list {
@@ -344,12 +386,6 @@ onMounted(initData)
 .member-item span {
   color: #606266;
   font-size: 13px;
-}
-
-.comment-time {
-  margin-left: 8px;
-  color: #909399;
-  font-size: 12px;
 }
 
 h2 {

@@ -10,6 +10,7 @@ import com.nju.partner.entity.User;
 import com.nju.partner.exception.BusinessException;
 import com.nju.partner.mapper.ApplicationMapper;
 import com.nju.partner.service.ApplicationService;
+import com.nju.partner.service.NotificationService;
 import com.nju.partner.service.PostService;
 import com.nju.partner.service.UserService;
 import com.nju.partner.vo.ApplicationVO;
@@ -25,10 +26,12 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
 
     private final PostService postService;
     private final UserService userService;
+    private final NotificationService notificationService;
 
-    public ApplicationServiceImpl(PostService postService, UserService userService) {
+    public ApplicationServiceImpl(PostService postService, UserService userService, NotificationService notificationService) {
         this.postService = postService;
         this.userService = userService;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -63,6 +66,17 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
         application.setMessage(message);
         application.setStatus(0);
         this.save(application);
+
+        User applicant = userService.getById(userId);
+        String applicantName = applicant == null ? "有同学" : (applicant.getNickname() != null ? applicant.getNickname() : applicant.getUsername());
+        notificationService.createNotification(
+                post.getUserId(),
+                "APPLICATION_CREATED",
+                "新的报名申请",
+                applicantName + " 报名了你的帖子《" + post.getTitle() + "》",
+                postId,
+                null,
+                application.getId());
     }
 
     @Override
@@ -125,9 +139,6 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
             throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "只能通过待审核的报名");
         }
 
-        application.setStatus(1);
-        this.updateById(application);
-
         Post post = postService.getById(application.getPostId());
         if (post == null) {
             throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "帖子不存在");
@@ -135,17 +146,33 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
         if (post.getStatus() != 0) {
             throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "只有招募中的帖子可以通过报名");
         }
-        if (post.getCurrentCount() != null && post.getNeedCount() != null
-                && post.getCurrentCount() >= post.getNeedCount()) {
+
+        long approvedCount = this.count(new LambdaQueryWrapper<Application>()
+                .eq(Application::getPostId, post.getId())
+                .eq(Application::getStatus, 1));
+        int currentCount = (int) approvedCount + 1;
+        if (post.getNeedCount() != null && currentCount >= post.getNeedCount()) {
             throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "帖子人数已满");
         }
 
-        int newCount = post.getCurrentCount() + 1;
+        application.setStatus(1);
+        this.updateById(application);
+
+        int newCount = currentCount + 1;
         post.setCurrentCount(newCount);
         if (newCount >= post.getNeedCount()) {
             post.setStatus(1);
         }
         postService.updateById(post);
+
+        notificationService.createNotification(
+                application.getUserId(),
+                "APPLICATION_PASSED",
+                "报名已通过",
+                "你报名的帖子《" + post.getTitle() + "》已通过审核",
+                post.getId(),
+                null,
+                application.getId());
     }
 
     @Override
@@ -157,6 +184,16 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
         }
         application.setStatus(2);
         this.updateById(application);
+
+        Post post = postService.getById(application.getPostId());
+        notificationService.createNotification(
+                application.getUserId(),
+                "APPLICATION_REJECTED",
+                "报名被拒绝",
+                "你报名的帖子《" + (post == null ? "未知帖子" : post.getTitle()) + "》未通过审核",
+                application.getPostId(),
+                null,
+                application.getId());
     }
 
     @Override

@@ -111,11 +111,12 @@ onMounted(loadAll)
             </el-table-column>
           </el-table>
         </el-tab-pane>
+
         <el-tab-pane label="我的报名">
           <el-empty v-if="myApplications.length === 0" description="暂无报名" />
           <el-table v-else :data="myApplications" border>
             <el-table-column prop="postTitle" label="帖子" min-width="180" />
-            <el-table-column prop="message" label="留言" min-width="160" />
+            <el-table-column prop="message" label="报名说明" min-width="160" />
             <el-table-column prop="status" label="状态" width="120">
               <template #default="scope">{{ APPLICATION_STATUS_MAP[scope.row.status] }}</template>
             </el-table-column>
@@ -134,6 +135,7 @@ onMounted(loadAll)
             </el-table-column>
           </el-table>
         </el-tab-pane>
+
         <el-tab-pane label="我的收藏">
           <el-empty v-if="myFavorites.length === 0" description="暂无收藏" />
           <el-table v-else :data="myFavorites" border>
@@ -168,4 +170,5 @@ onMounted(loadAll)
 .profile-form {
   max-width: 520px;
 }
+
 </style>
