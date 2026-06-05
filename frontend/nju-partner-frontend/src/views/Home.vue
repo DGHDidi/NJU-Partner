@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { getPostList } from '@/api/post'
 import Navbar from '@/components/Navbar.vue'
@@ -18,6 +18,11 @@ const filters = reactive({
   grade: '',
   timeRange: [],
 })
+const heroKeyword = ref('')
+
+const recruitingCount = computed(() => postList.value.filter((item) => item.status === 0).length)
+const visibleCampusCount = computed(() => new Set(postList.value.map((item) => item.campus).filter(Boolean)).size)
+const typeCount = computed(() => new Set(postList.value.map((item) => item.type).filter(Boolean)).size)
 
 async function loadPosts() {
   loading.value = true
@@ -50,6 +55,12 @@ function handlePostClick(post) {
   router.push({ name: 'PostDetail', params: { id: post.id } })
 }
 
+function handleHeroSearch() {
+  filters.keyword = heroKeyword.value
+  pagination.pageNum = 1
+  loadPosts()
+}
+
 watch(() => pagination.pageNum, loadPosts)
 
 onMounted(loadPosts)
@@ -60,9 +71,55 @@ onMounted(loadPosts)
     <Navbar />
 
     <main class="page-main">
-      <section class="hero">
-        <h1>南大轻搭子</h1>
-        <p>找自习搭子、运动搭子、竞赛队友、讲座同行、跨校区同行</p>
+      <section class="hero-panel">
+        <div class="hero-blob one"></div>
+        <div class="hero-blob two"></div>
+        <div class="hero-copy">
+          <p class="eyebrow">NJU PARTNER</p>
+          <h1>发现正在发生的校园组队</h1>
+          <p>找自习搭子、运动搭子、竞赛队友、讲座同行和跨校区同行。</p>
+          <div class="hero-search">
+            <el-input
+              v-model="heroKeyword"
+              placeholder="搜索自习、羽毛球、讲座、拼单..."
+              clearable
+              @keyup.enter="handleHeroSearch"
+            />
+            <el-button type="primary" @click="handleHeroSearch">快速搜索</el-button>
+          </div>
+          <div class="hero-chips">
+            <span>即时招募</span>
+            <span>报名审核</span>
+            <span>站内通知</span>
+            <span>评论回复</span>
+          </div>
+        </div>
+        <div class="hero-icons" aria-hidden="true">
+          <span>📚</span>
+          <span>🏃</span>
+          <span>🍜</span>
+          <span>🏆</span>
+          <span>🎤</span>
+          <span>🚇</span>
+        </div>
+        <div class="hero-stats">
+          <div class="stat-item">
+            <span>{{ pagination.total }}</span>
+            <label>全部帖子</label>
+          </div>
+          <div class="stat-item">
+            <span>{{ recruitingCount }}</span>
+            <label>本页招募中</label>
+          </div>
+          <div class="stat-item">
+            <span>{{ visibleCampusCount }}</span>
+            <label>覆盖校区</label>
+          </div>
+          <div class="stat-item">
+            <span>{{ typeCount }}</span>
+            <label>活动类型</label>
+          </div>
+        </div>
       </section>
 
       <FilterBar @search="handleSearch" />
@@ -77,12 +134,14 @@ onMounted(loadPosts)
             <el-empty description="暂无组队帖" />
           </div>
 
-          <PostCard
-            v-for="post in postList"
-            :key="post.id"
-            :post="post"
-            @click="handlePostClick(post)"
-          />
+          <div v-else class="post-list">
+            <PostCard
+              v-for="post in postList"
+              :key="post.id"
+              :post="post"
+              @click="handlePostClick(post)"
+            />
+          </div>
         </template>
       </el-skeleton>
 
@@ -100,29 +159,205 @@ onMounted(loadPosts)
 
 <style scoped>
 .page-main {
-  max-width: 1100px;
+  max-width: 1180px;
   margin: 0 auto;
-  padding: 24px 20px 40px;
+  padding: 28px 20px 44px;
 }
 
-.hero {
-  text-align: center;
-  margin-bottom: 24px;
+.hero-panel {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 178px auto;
+  gap: 24px;
+  align-items: end;
+  margin-bottom: 22px;
+  padding: 34px 36px;
+  border: 1px solid rgba(106, 44, 138, 0.15);
+  border-radius: 24px;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.55) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.5) 1px, transparent 1px),
+    linear-gradient(145deg, rgba(238, 244, 255, 0.94), rgba(247, 243, 255, 0.9) 50%, rgba(237, 248, 255, 0.92));
+  background-size: 34px 34px, 34px 34px, auto;
+  box-shadow:
+    0 24px 54px rgba(64, 158, 255, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.36);
 }
 
-.hero h1 {
+.hero-blob {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(46px);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.hero-blob.one {
+  right: 22%;
+  top: -40px;
+  width: 150px;
+  height: 150px;
+  background: #8b7cf6;
+}
+
+.hero-blob.two {
+  right: -30px;
+  bottom: -50px;
+  width: 190px;
+  height: 190px;
+  background: #409eff;
+}
+
+.eyebrow {
   margin: 0 0 8px;
-  color: #409eff;
+  color: #8b7cf6;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
 }
 
-.hero p {
+.hero-copy h1 {
+  margin: 0 0 10px;
+  color: #1f2d3d;
+  font-size: 34px;
+  line-height: 1.18;
+}
+
+.hero-copy p:last-child {
   margin: 0;
   color: #606266;
+  font-size: 15px;
+}
+
+.hero-search {
+  display: flex;
+  gap: 10px;
+  max-width: 520px;
+  margin-top: 22px;
+}
+
+.hero-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.hero-chips span {
+  padding: 6px 10px;
+  border: 1px solid rgba(106, 44, 138, 0.15);
+  border-radius: 999px;
+  color: #606266;
+  background: rgba(255, 255, 255, 0.56);
+  font-size: 12px;
+}
+
+.hero-icons {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(2, 72px);
+  gap: 12px;
+}
+
+.hero-icons span {
+  height: 62px;
+  border-radius: 20px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(106, 44, 138, 0.14);
+  background: rgba(255, 255, 255, 0.62);
+  box-shadow: 0 12px 28px rgba(64, 158, 255, 0.1);
+  font-size: 26px;
+  animation: float-icon 3.4s ease-in-out infinite;
+}
+
+.hero-icons span:nth-child(2n) {
+  animation-delay: 0.5s;
+}
+
+.hero-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 112px);
+  gap: 10px;
+}
+
+.stat-item {
+  padding: 16px 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid rgba(106, 44, 138, 0.14);
+  box-shadow: 0 12px 24px rgba(64, 158, 255, 0.1);
+}
+
+.stat-item span {
+  display: block;
+  color: #172033;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.stat-item label {
+  display: block;
+  margin-top: 4px;
+  color: #738295;
+  font-size: 12px;
+}
+
+.post-list {
+  display: grid;
+  gap: 12px;
+}
+
+.empty,
+.pagination {
+  border: 1px solid rgba(106, 44, 138, 0.15);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(12px);
 }
 
 .pagination {
   display: flex;
   justify-content: center;
   margin-top: 24px;
+  padding: 14px;
+}
+
+@keyframes float-icon {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@media (max-width: 860px) {
+  .hero-panel {
+    grid-template-columns: 1fr;
+    padding: 24px;
+  }
+
+  .hero-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .hero-icons {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .hero-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-search {
+    flex-direction: column;
+  }
 }
 </style>

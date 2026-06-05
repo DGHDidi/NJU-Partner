@@ -111,7 +111,18 @@ onMounted(loadPosts)
     <Navbar />
 
     <main class="page-main" v-loading="loading">
-      <h2>后台管理</h2>
+      <div class="admin-header">
+        <div>
+          <h2>后台管理</h2>
+          <p>帖子、用户与评论的统一管理入口</p>
+        </div>
+      </div>
+
+      <div class="admin-stats">
+        <div><strong>{{ postQuery.total }}</strong><span>帖子总数</span></div>
+        <div><strong>{{ userQuery.total }}</strong><span>用户总数</span></div>
+        <div><strong>{{ commentQuery.total }}</strong><span>评论总数</span></div>
+      </div>
 
       <el-tabs v-model="activeTab" type="border-card" @tab-change="handleTabChange">
         <el-tab-pane label="帖子管理" name="posts">
@@ -208,7 +219,53 @@ onMounted(loadPosts)
 }
 
 h2 {
-  margin: 0 0 16px;
+  margin: 0 0 6px;
+  color: #1f2d3d;
+}
+
+.admin-header {
+  margin-bottom: 16px;
+  padding: 20px 22px;
+  border: 1px solid rgba(106, 44, 138, 0.15);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 14px 30px rgba(64, 158, 255, 0.08);
+}
+
+.admin-header p {
+  margin: 0;
+  color: #7a8495;
+}
+
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.admin-stats div {
+  padding: 16px;
+  border: 1px solid rgba(106, 44, 138, 0.15);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(12px);
+}
+
+.admin-stats strong,
+.admin-stats span {
+  display: block;
+}
+
+.admin-stats strong {
+  color: #1f2d3d;
+  font-size: 24px;
+}
+
+.admin-stats span {
+  margin-top: 4px;
+  color: #7a8495;
 }
 
 .toolbar {
@@ -221,5 +278,18 @@ h2 {
 .pagination {
   justify-content: center;
   margin-top: 16px;
+}
+
+.page-main :deep(.el-tabs--border-card) {
+  border: 1px solid rgba(106, 44, 138, 0.15);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 14px 30px rgba(64, 158, 255, 0.08);
+}
+
+@media (max-width: 640px) {
+  .admin-stats {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

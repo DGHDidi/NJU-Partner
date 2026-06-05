@@ -115,8 +115,13 @@ async function handleRegister() {
   <div class="page page-auth">
     <el-card class="auth-card" :class="{ 'is-shaking': isShaking }">
       <template #header>
-        <h2>注册</h2>
-        <p class="subtitle">加入南大轻搭子，找到你的校园搭子</p>
+        <div class="register-header">
+          <span class="register-mark">N</span>
+          <div>
+            <h2>创建账号</h2>
+            <p class="subtitle">加入南大轻搭子，找到你的校园搭子</p>
+          </div>
+        </div>
       </template>
 
       <el-form
@@ -172,7 +177,7 @@ async function handleRegister() {
           <el-input v-model="form.major" placeholder="请输入专业" clearable />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :loading="loading" @click="handleRegister">
+          <el-button class="register-btn" type="primary" :loading="loading" @click="handleRegister">
             注册
           </el-button>
           <el-button link type="primary" @click="router.push({ name: 'Login' })">
@@ -194,24 +199,53 @@ async function handleRegister() {
 }
 
 .auth-card {
-  width: 480px;
+  width: min(560px, 100%);
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.78));
 }
 
 .auth-card.is-shaking {
   animation: form-shake 0.42s ease;
 }
 
+.register-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.register-mark {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-weight: 800;
+  background: linear-gradient(135deg, #174ea6, #0f766e);
+  box-shadow: 0 10px 22px rgba(23, 78, 166, 0.22);
+}
+
 .auth-card h2 {
   margin: 0;
-  text-align: center;
-  color: #303133;
+  color: #172033;
 }
 
 .subtitle {
-  margin: 8px 0 0;
-  text-align: center;
+  margin: 6px 0 0;
   font-size: 13px;
-  color: #909399;
+  color: #738295;
+}
+
+.auth-card :deep(.el-form-item__label) {
+  color: #526173;
+  font-weight: 700;
+}
+
+.register-btn {
+  min-width: 112px;
+  box-shadow: 0 10px 22px rgba(23, 78, 166, 0.22);
 }
 
 @keyframes form-shake {

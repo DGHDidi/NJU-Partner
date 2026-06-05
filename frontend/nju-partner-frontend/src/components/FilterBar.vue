@@ -35,6 +35,10 @@ function handleReset() {
 
 <template>
   <el-card class="filter-bar" shadow="never">
+    <div class="filter-heading">
+      <strong>筛选组队</strong>
+      <span>按校区、类型、年级和时间快速定位</span>
+    </div>
     <el-form class="filter-form" :inline="true" @submit.prevent="handleSearch">
       <el-form-item label="关键词">
         <el-input v-model="filters.keyword" class="keyword-input" placeholder="搜索标题或描述" clearable />
@@ -106,7 +110,28 @@ function handleReset() {
 
 <style scoped>
 .filter-bar {
+  margin-bottom: 18px;
+  border-radius: 20px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(247, 243, 255, 0.76));
+  border-color: rgba(106, 44, 138, 0.15);
+}
+
+.filter-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
   margin-bottom: 16px;
+}
+
+.filter-heading strong {
+  color: #172033;
+  font-size: 16px;
+}
+
+.filter-heading span {
+  color: #8793a3;
+  font-size: 13px;
 }
 
 .filter-form {
@@ -141,6 +166,15 @@ function handleReset() {
 
 .filter-actions {
   white-space: nowrap;
+}
+
+.filter-actions :deep(.el-button) {
+  border-radius: 14px;
+}
+
+.filter-form :deep(.el-form-item__label) {
+  color: #606266;
+  font-weight: 700;
 }
 
 @media (max-width: 768px) {

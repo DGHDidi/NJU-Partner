@@ -53,19 +53,26 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
             throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "只有招募中的帖子可以报名");
         }
 
-        long count = this.count(new LambdaQueryWrapper<Application>()
+        Application application = this.getOne(new LambdaQueryWrapper<Application>()
                 .eq(Application::getPostId, postId)
-                .eq(Application::getUserId, userId));
-        if (count > 0) {
+                .eq(Application::getUserId, userId)
+                .last("LIMIT 1"));
+        if (application != null && (application.getStatus() == 0 || application.getStatus() == 1)) {
             throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "你已经报名过该帖子，不能重复报名");
         }
 
-        Application application = new Application();
-        application.setPostId(postId);
-        application.setUserId(userId);
-        application.setMessage(message);
-        application.setStatus(0);
-        this.save(application);
+        if (application == null) {
+            application = new Application();
+            application.setPostId(postId);
+            application.setUserId(userId);
+            application.setMessage(message);
+            application.setStatus(0);
+            this.save(application);
+        } else {
+            application.setMessage(message);
+            application.setStatus(0);
+            this.updateById(application);
+        }
 
         User applicant = userService.getById(userId);
         String applicantName = applicant == null ? "有同学" : (applicant.getNickname() != null ? applicant.getNickname() : applicant.getUsername());
@@ -113,7 +120,9 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
 
         Application application = this.getOne(new LambdaQueryWrapper<Application>()
                 .eq(Application::getPostId, postId)
-                .eq(Application::getUserId, userId));
+                .eq(Application::getUserId, userId)
+                .orderByDesc(Application::getUpdatedTime)
+                .last("LIMIT 1"));
         return application == null ? null : toApplicationVO(application);
     }
 
