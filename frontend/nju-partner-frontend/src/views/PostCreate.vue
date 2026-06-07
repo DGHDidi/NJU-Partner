@@ -29,8 +29,16 @@ const form = reactive({
   contact: '',
 })
 
+const validateNotBlank = (message) => (_rule, value, callback) => {
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    callback(new Error(message))
+    return
+  }
+  callback()
+}
+
 const rules = {
-  title: [{ required: true, message: '请输入标题', trigger: 'blur' }],
+  title: [{ required: true, validator: validateNotBlank('标题不能为空'), trigger: 'blur' }],
   type: [{ required: true, message: '请选择活动类型', trigger: 'change' }],
   description: [{ required: true, message: '请输入活动描述', trigger: 'blur' }],
   activityTime: [
@@ -48,6 +56,7 @@ const rules = {
   ],
   needCount: [{ required: true, message: '请输入人数', trigger: 'change' }],
   campus: [{ required: true, message: '请选择校区', trigger: 'change' }],
+  contact: [{ required: true, validator: validateNotBlank('联系方式不能为空'), trigger: 'blur' }],
 }
 
 const pickerOptions = {
@@ -61,7 +70,7 @@ const pickerOptions = {
 const stepFields = [
   ['title', 'type', 'description'],
   ['campus', 'activityTime', 'needCount'],
-  [],
+  ['contact'],
 ]
 
 async function validateCurrentStep() {
@@ -88,6 +97,8 @@ async function handleSubmit() {
   try {
     const payload = {
       ...form,
+      title: form.title.trim(),
+      contact: form.contact.trim(),
       activityTime: form.activityTime || null,
       gradeLimit: form.gradeLimit.length ? form.gradeLimit.join(',') : '',
     }
@@ -242,7 +253,7 @@ onMounted(loadPostForEdit)
             <el-form-item label="专业限制">
               <el-input v-model="form.majorLimit" placeholder="不限" />
             </el-form-item>
-            <el-form-item label="联系方式">
+            <el-form-item label="联系方式" prop="contact" required>
               <el-input v-model="form.contact" placeholder="微信/QQ 等" />
             </el-form-item>
           </div>

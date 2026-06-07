@@ -63,7 +63,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         post.setCampus(dto.getCampus().trim());
         post.setGradeLimit(dto.getGradeLimit());
         post.setMajorLimit(dto.getMajorLimit());
-        post.setContact(dto.getContact());
+        post.setContact(dto.getContact().trim());
         post.setStatus(0);
         this.save(post);
     }
@@ -138,7 +138,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         post.setCampus(dto.getCampus().trim());
         post.setGradeLimit(dto.getGradeLimit());
         post.setMajorLimit(dto.getMajorLimit());
-        post.setContact(dto.getContact());
+        post.setContact(dto.getContact().trim());
         this.updateById(post);
     }
 
