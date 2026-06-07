@@ -196,13 +196,20 @@ async function handleRegister() {
   align-items: center;
   justify-content: center;
   padding: 24px;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(82, 99, 132, 0.16), transparent 28%),
+    radial-gradient(circle at 88% 12%, rgba(116, 103, 137, 0.14), transparent 30%),
+    linear-gradient(145deg, rgba(243, 246, 249, 0.98), rgba(247, 245, 248, 0.94));
 }
 
 .auth-card {
   width: min(560px, 100%);
-  border-radius: 14px;
+  border-radius: 22px;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.78));
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.86));
+  box-shadow:
+    0 28px 64px rgba(42, 52, 66, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .auth-card.is-shaking {
@@ -218,13 +225,13 @@ async function handleRegister() {
 .register-mark {
   width: 42px;
   height: 42px;
-  border-radius: 12px;
+  border-radius: 14px;
   display: grid;
   place-items: center;
   color: #fff;
   font-weight: 800;
-  background: linear-gradient(135deg, #174ea6, #0f766e);
-  box-shadow: 0 10px 22px rgba(23, 78, 166, 0.22);
+  background: linear-gradient(135deg, #44546a, #63714f);
+  box-shadow: 0 12px 24px rgba(68, 84, 106, 0.22);
 }
 
 .auth-card h2 {
@@ -243,9 +250,23 @@ async function handleRegister() {
   font-weight: 700;
 }
 
+.auth-card :deep(.el-input__wrapper),
+.auth-card :deep(.el-select__wrapper) {
+  min-height: 42px;
+  border-radius: 12px;
+}
+
+.auth-card :deep(.el-input__wrapper.is-focus),
+.auth-card :deep(.el-select__wrapper.is-focused) {
+  box-shadow:
+    0 0 0 1px #44546a inset,
+    0 0 0 3px rgba(68, 84, 106, 0.1);
+}
+
 .register-btn {
   min-width: 112px;
-  box-shadow: 0 10px 22px rgba(23, 78, 166, 0.22);
+  border-radius: 14px;
+  box-shadow: 0 12px 24px rgba(68, 84, 106, 0.22);
 }
 
 @keyframes form-shake {

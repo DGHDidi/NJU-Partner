@@ -94,13 +94,13 @@ onMounted(loadPosts)
             <span>评论回复</span>
           </div>
         </div>
-        <div class="hero-icons" aria-hidden="true">
-          <span>📚</span>
-          <span>🏃</span>
-          <span>🍜</span>
-          <span>🏆</span>
-          <span>🎤</span>
-          <span>🚇</span>
+        <div class="hero-media" aria-hidden="true">
+          <div class="media-tile primary"></div>
+          <div class="media-tile secondary"></div>
+          <div class="media-caption">
+            <strong>Campus moments</strong>
+            <span>学习、运动、同行与协作</span>
+          </div>
         </div>
         <div class="hero-stats">
           <div class="stat-item">
@@ -168,20 +168,20 @@ onMounted(loadPosts)
   position: relative;
   overflow: hidden;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 178px auto;
-  gap: 24px;
+  grid-template-columns: minmax(0, 1fr) 240px auto;
+  gap: 28px;
   align-items: end;
   margin-bottom: 22px;
   padding: 34px 36px;
   border: 1px solid rgba(106, 44, 138, 0.15);
   border-radius: 24px;
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.55) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.5) 1px, transparent 1px),
-    linear-gradient(145deg, rgba(238, 244, 255, 0.94), rgba(247, 243, 255, 0.9) 50%, rgba(237, 248, 255, 0.92));
+    linear-gradient(90deg, rgba(255, 255, 255, 0.5) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.48) 1px, transparent 1px),
+    linear-gradient(145deg, rgba(245, 247, 251, 0.96), rgba(248, 245, 251, 0.92) 50%, rgba(243, 248, 247, 0.94));
   background-size: 34px 34px, 34px 34px, auto;
   box-shadow:
-    0 24px 54px rgba(64, 158, 255, 0.16),
+    0 28px 58px rgba(71, 85, 105, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.36);
 }
 
@@ -198,7 +198,7 @@ onMounted(loadPosts)
   top: -40px;
   width: 150px;
   height: 150px;
-  background: #8b7cf6;
+  background: #7e69ab;
 }
 
 .hero-blob.two {
@@ -206,12 +206,12 @@ onMounted(loadPosts)
   bottom: -50px;
   width: 190px;
   height: 190px;
-  background: #409eff;
+  background: #556faa;
 }
 
 .eyebrow {
   margin: 0 0 8px;
-  color: #8b7cf6;
+  color: #6a5f78;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -253,28 +253,61 @@ onMounted(loadPosts)
   font-size: 12px;
 }
 
-.hero-icons {
+.hero-media {
   position: relative;
   z-index: 1;
-  display: grid;
-  grid-template-columns: repeat(2, 72px);
-  gap: 12px;
+  min-height: 214px;
 }
 
-.hero-icons span {
-  height: 62px;
-  border-radius: 20px;
-  display: grid;
-  place-items: center;
+.media-tile {
+  position: absolute;
+  overflow: hidden;
   border: 1px solid rgba(106, 44, 138, 0.14);
-  background: rgba(255, 255, 255, 0.62);
-  box-shadow: 0 12px 28px rgba(64, 158, 255, 0.1);
-  font-size: 26px;
-  animation: float-icon 3.4s ease-in-out infinite;
+  border-radius: 28px;
+  background-size: cover;
+  background-position: center;
+  filter: saturate(0.72) contrast(1.08);
+  box-shadow: 0 18px 34px rgba(71, 85, 105, 0.14);
 }
 
-.hero-icons span:nth-child(2n) {
-  animation-delay: 0.5s;
+.media-tile.primary {
+  inset: 0 24px 52px 0;
+  background-image:
+    linear-gradient(180deg, rgba(31, 45, 61, 0.04), rgba(31, 45, 61, 0.28)),
+    url('https://picsum.photos/seed/nju-campus-study/640/720');
+}
+
+.media-tile.secondary {
+  right: 0;
+  bottom: 0;
+  width: 108px;
+  height: 108px;
+  background-image:
+    linear-gradient(180deg, rgba(31, 45, 61, 0.02), rgba(31, 45, 61, 0.24)),
+    url('https://picsum.photos/seed/nju-campus-team/420/420');
+}
+
+.media-caption {
+  position: absolute;
+  left: 18px;
+  bottom: 18px;
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 16px;
+  color: #fff;
+  background: rgba(31, 45, 61, 0.36);
+  backdrop-filter: blur(12px);
+}
+
+.media-caption strong {
+  font-size: 13px;
+}
+
+.media-caption span {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 12px;
 }
 
 .hero-stats {
@@ -288,7 +321,7 @@ onMounted(loadPosts)
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.76);
   border: 1px solid rgba(106, 44, 138, 0.14);
-  box-shadow: 0 12px 24px rgba(64, 158, 255, 0.1);
+  box-shadow: 0 12px 24px rgba(71, 85, 105, 0.08);
 }
 
 .stat-item span {
@@ -325,17 +358,6 @@ onMounted(loadPosts)
   padding: 14px;
 }
 
-@keyframes float-icon {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-6px);
-  }
-}
-
 @media (max-width: 860px) {
   .hero-panel {
     grid-template-columns: 1fr;
@@ -346,8 +368,8 @@ onMounted(loadPosts)
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .hero-icons {
-    grid-template-columns: repeat(3, 1fr);
+  .hero-media {
+    min-height: 220px;
   }
 }
 

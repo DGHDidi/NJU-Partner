@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { createPost, getPostDetail, updatePost } from '@/api/post'
 import { CAMPUS_OPTIONS, GRADE_OPTIONS, POST_TYPE_OPTIONS } from '@/constants'
+import { formatTypeLabel } from '@/utils/typeDisplay'
 import Navbar from '@/components/Navbar.vue'
 
 const router = useRouter()
@@ -184,7 +185,7 @@ onMounted(loadPostForEdit)
                   :class="{ active: form.type === item }"
                   @click="form.type = item"
                 >
-                  {{ item }}
+                  {{ formatTypeLabel(item) }}
                 </button>
               </div>
             </el-form-item>
@@ -328,7 +329,7 @@ h2 {
   border-radius: 10px;
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, #409eff, #8b7cf6);
+  background: linear-gradient(135deg, #4f647f, #7a6b90);
   color: #fff;
   font-size: 13px;
 }
@@ -355,8 +356,8 @@ h2 {
 .type-card.active {
   transform: translateY(-1px);
   border-color: rgba(106, 44, 138, 0.3);
-  color: #409eff;
-  box-shadow: 0 10px 22px rgba(64, 158, 255, 0.14);
+  color: #4f647f;
+  box-shadow: 0 10px 22px rgba(71, 85, 105, 0.12);
 }
 
 .grade-tags {
@@ -383,10 +384,19 @@ h2 {
 
 .submit-btn {
   min-width: 128px;
-  box-shadow: 0 10px 22px rgba(23, 78, 166, 0.22);
+  box-shadow: 0 12px 24px rgba(71, 85, 105, 0.18);
 }
 
 .cancel-btn {
   min-width: 88px;
+  background: rgba(255, 255, 255, 0.28);
+  border-color: rgba(123, 137, 156, 0.24);
+  color: #526173;
+  box-shadow: none;
+}
+
+.cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.5);
+  border-color: rgba(79, 100, 127, 0.3);
 }
 </style>

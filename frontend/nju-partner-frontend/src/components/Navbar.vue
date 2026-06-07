@@ -234,7 +234,7 @@ watch(
   background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(18px);
   border-bottom: 1px solid rgba(106, 44, 138, 0.15);
-  box-shadow: 0 10px 30px rgba(64, 158, 255, 0.1);
+  box-shadow: 0 10px 30px rgba(71, 85, 105, 0.08);
 }
 
 .navbar-inner {
@@ -261,11 +261,11 @@ watch(
   border-radius: 13px;
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, #409eff, #8b7cf6);
+  background: linear-gradient(135deg, #4f647f, #7a6b90);
   color: #fff;
   font-weight: 800;
   letter-spacing: 0;
-  box-shadow: 0 8px 18px rgba(64, 158, 255, 0.24);
+  box-shadow: 0 8px 18px rgba(71, 85, 105, 0.18);
 }
 
 .brand-copy {
@@ -302,22 +302,23 @@ watch(
   min-height: 34px;
   padding: 0 12px;
   color: #1f3554;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(106, 44, 138, 0.15);
+  background: rgba(255, 255, 255, 0.32);
+  border: 1px solid rgba(79, 100, 127, 0.18);
+  box-shadow: none;
 }
 
 .nav-links :deep(.nav-pill:hover),
 .nav-actions :deep(.nav-pill:hover) {
-  color: #174ea6;
-  border-color: rgba(106, 44, 138, 0.3);
-  background: rgba(255, 255, 255, 0.9);
+  color: #44546a;
+  border-color: rgba(79, 100, 127, 0.3);
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .nav-links :deep(.nav-pill.primary) {
   color: #fff;
-  background: linear-gradient(135deg, #409eff, #8b7cf6);
+  background: linear-gradient(135deg, #4f647f, #7a6b90);
   border-color: transparent;
-  box-shadow: 0 8px 18px rgba(64, 158, 255, 0.22);
+  box-shadow: 0 8px 18px rgba(71, 85, 105, 0.18);
 }
 
 .user-avatar {
@@ -326,10 +327,10 @@ watch(
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, #409eff, #8b7cf6);
+  background: linear-gradient(135deg, #4f647f, #7a6b90);
   color: #fff;
   font-weight: 800;
-  box-shadow: 0 10px 20px rgba(64, 158, 255, 0.2);
+  box-shadow: 0 10px 20px rgba(71, 85, 105, 0.16);
 }
 
 .notification-badge {

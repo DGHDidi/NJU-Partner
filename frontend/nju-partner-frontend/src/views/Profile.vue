@@ -6,6 +6,7 @@ import { cancelApplication } from '@/api/application'
 import { getProfile, updateProfile, getMyPosts, getMyApplications, getMyFavorites } from '@/api/user'
 import { APPLICATION_STATUS_MAP, POST_STATUS_MAP } from '@/constants'
 import { useUserStore } from '@/stores/user'
+import { formatTypeLabel } from '@/utils/typeDisplay'
 import Navbar from '@/components/Navbar.vue'
 
 const userStore = useUserStore()
@@ -126,7 +127,9 @@ onMounted(loadAll)
           <el-empty v-if="myPosts.length === 0" description="暂无发布" />
           <el-table v-else :data="myPosts" class="profile-table">
             <el-table-column prop="title" label="标题" min-width="180" />
-            <el-table-column prop="type" label="类型" width="120" />
+            <el-table-column prop="type" label="类型" width="150">
+              <template #default="scope">{{ formatTypeLabel(scope.row.type) }}</template>
+            </el-table-column>
             <el-table-column prop="status" label="状态" width="120">
               <template #default="scope">
                 <el-tag :type="getPostStatusTagType(scope.row.status)" effect="light">
@@ -175,7 +178,9 @@ onMounted(loadAll)
           <el-empty v-if="myFavorites.length === 0" description="暂无收藏" />
           <el-table v-else :data="myFavorites" class="profile-table">
             <el-table-column prop="title" label="标题" min-width="180" />
-            <el-table-column prop="type" label="类型" width="120" />
+            <el-table-column prop="type" label="类型" width="150">
+              <template #default="scope">{{ formatTypeLabel(scope.row.type) }}</template>
+            </el-table-column>
             <el-table-column prop="status" label="状态" width="120">
               <template #default="scope">
                 <el-tag :type="getPostStatusTagType(scope.row.status)" effect="light">
@@ -229,11 +234,11 @@ onMounted(loadAll)
   border-radius: 18px;
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, #409eff, #8b7cf6);
+  background: linear-gradient(135deg, #4f647f, #7a6b90);
   color: #fff;
   font-size: 22px;
   font-weight: 900;
-  box-shadow: 0 14px 26px rgba(64, 158, 255, 0.2);
+  box-shadow: 0 14px 26px rgba(71, 85, 105, 0.16);
 }
 
 .profile-stats {
@@ -249,7 +254,7 @@ onMounted(loadAll)
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.78);
   backdrop-filter: blur(12px);
-  box-shadow: 0 12px 28px rgba(64, 158, 255, 0.08);
+  box-shadow: 0 12px 28px rgba(71, 85, 105, 0.07);
 }
 
 .profile-stats strong,
@@ -277,7 +282,7 @@ onMounted(loadAll)
   border: 1px solid rgba(106, 44, 138, 0.15);
   border-radius: 20px;
   overflow: visible;
-  box-shadow: 0 14px 30px rgba(64, 158, 255, 0.08);
+  box-shadow: 0 14px 30px rgba(71, 85, 105, 0.07);
   background: rgba(255, 255, 255, 0.78);
 }
 
@@ -309,8 +314,8 @@ onMounted(loadAll)
 .page-main :deep(.el-tabs--border-card > .el-tabs__header .el-tabs__item.is-active) {
   color: #fff;
   border-color: transparent;
-  background: linear-gradient(135deg, #409eff, #8b7cf6);
-  box-shadow: 0 10px 20px rgba(64, 158, 255, 0.18);
+  background: linear-gradient(135deg, #4f647f, #7a6b90);
+  box-shadow: 0 10px 20px rgba(71, 85, 105, 0.15);
 }
 
 .page-main :deep(.el-tabs--border-card > .el-tabs__content) {

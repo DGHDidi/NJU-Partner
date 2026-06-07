@@ -215,7 +215,7 @@ onMounted(loadPosts)
 .page-main {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 24px 20px 40px;
+  padding: 32px 20px 48px;
 }
 
 h2 {
@@ -225,12 +225,13 @@ h2 {
 
 .admin-header {
   margin-bottom: 16px;
-  padding: 20px 22px;
-  border: 1px solid rgba(106, 44, 138, 0.15);
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.78);
+  padding: 24px 26px;
+  border: 1px solid rgba(79, 100, 127, 0.16);
+  border-radius: 24px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(247, 249, 252, 0.72));
   backdrop-filter: blur(12px);
-  box-shadow: 0 14px 30px rgba(64, 158, 255, 0.08);
+  box-shadow: 0 18px 38px rgba(42, 52, 66, 0.1);
 }
 
 .admin-header p {
@@ -241,16 +242,18 @@ h2 {
 .admin-stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin-bottom: 18px;
+  gap: 14px;
+  margin-bottom: 20px;
 }
 
 .admin-stats div {
-  padding: 16px;
-  border: 1px solid rgba(106, 44, 138, 0.15);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.78);
+  padding: 18px 18px 16px;
+  border: 1px solid rgba(79, 100, 127, 0.16);
+  border-radius: 20px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.84), rgba(247, 249, 252, 0.74));
   backdrop-filter: blur(12px);
+  box-shadow: 0 14px 28px rgba(42, 52, 66, 0.08);
 }
 
 .admin-stats strong,
@@ -270,9 +273,10 @@ h2 {
 
 .toolbar {
   display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-  max-width: 360px;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 16px;
+  max-width: 420px;
 }
 
 .pagination {
@@ -281,10 +285,38 @@ h2 {
 }
 
 .page-main :deep(.el-tabs--border-card) {
-  border: 1px solid rgba(106, 44, 138, 0.15);
-  border-radius: 20px;
+  border: 1px solid rgba(79, 100, 127, 0.16);
+  border-radius: 22px;
   overflow: hidden;
-  box-shadow: 0 14px 30px rgba(64, 158, 255, 0.08);
+  background: rgba(255, 255, 255, 0.84);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 18px 38px rgba(42, 52, 66, 0.1);
+}
+
+.page-main :deep(.el-tabs--border-card > .el-tabs__header) {
+  background:
+    linear-gradient(180deg, rgba(248, 250, 252, 0.96), rgba(241, 245, 249, 0.9));
+  border-bottom-color: rgba(123, 137, 156, 0.18);
+}
+
+.page-main :deep(.el-tabs--border-card > .el-tabs__content) {
+  padding: 18px;
+}
+
+.page-main :deep(.el-tabs--border-card > .el-tabs__header .el-tabs__item.is-active) {
+  background: rgba(255, 255, 255, 0.88);
+  border-right-color: rgba(123, 137, 156, 0.16);
+  border-left-color: rgba(123, 137, 156, 0.16);
+}
+
+.page-main :deep(.el-table) {
+  border-radius: 14px;
+  border: 1px solid rgba(123, 137, 156, 0.18);
+}
+
+.page-main :deep(.el-input__wrapper) {
+  min-height: 40px;
+  border-radius: 12px;
 }
 
 @media (max-width: 640px) {

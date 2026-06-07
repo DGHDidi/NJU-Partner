@@ -1,6 +1,7 @@
 <script setup>
 import { reactive } from 'vue'
 import { CAMPUS_OPTIONS, GRADE_OPTIONS, POST_TYPE_OPTIONS, POST_STATUS_MAP } from '@/constants'
+import { formatTypeLabel } from '@/utils/typeDisplay'
 
 const emit = defineEmits(['search'])
 
@@ -60,7 +61,7 @@ function handleReset() {
           <el-option
             v-for="item in POST_TYPE_OPTIONS"
             :key="item"
-            :label="item"
+            :label="formatTypeLabel(item)"
             :value="item"
           />
         </el-select>
@@ -113,8 +114,9 @@ function handleReset() {
   margin-bottom: 18px;
   border-radius: 20px;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(247, 243, 255, 0.76));
+    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(248, 247, 250, 0.82));
   border-color: rgba(106, 44, 138, 0.15);
+  box-shadow: 0 16px 34px rgba(71, 85, 105, 0.07);
 }
 
 .filter-heading {
@@ -126,7 +128,8 @@ function handleReset() {
 
 .filter-heading strong {
   color: #172033;
-  font-size: 16px;
+  font-size: 17px;
+  letter-spacing: 0.01em;
 }
 
 .filter-heading span {
@@ -172,9 +175,23 @@ function handleReset() {
   border-radius: 14px;
 }
 
+.filter-actions :deep(.el-button--primary) {
+  --el-button-bg-color: #4f647f;
+  --el-button-border-color: #4f647f;
+  --el-button-hover-bg-color: #5f526e;
+  --el-button-hover-border-color: #5f526e;
+  box-shadow: 0 12px 22px rgba(71, 85, 105, 0.14);
+}
+
 .filter-form :deep(.el-form-item__label) {
-  color: #606266;
+  color: #5f6f84;
   font-weight: 700;
+}
+
+.filter-form :deep(.el-input__wrapper),
+.filter-form :deep(.el-select__wrapper) {
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
 }
 
 @media (max-width: 768px) {

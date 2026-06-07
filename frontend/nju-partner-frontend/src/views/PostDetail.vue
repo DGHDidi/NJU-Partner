@@ -9,6 +9,7 @@ import { addFavorite, removeFavorite } from '@/api/favorite'
 import { APPLICATION_STATUS_MAP, POST_STATUS_MAP } from '@/constants'
 import { useUserStore } from '@/stores/user'
 import { formatDateTime } from '@/utils/date'
+import { formatTypeLabel } from '@/utils/typeDisplay'
 import Navbar from '@/components/Navbar.vue'
 
 const route = useRoute()
@@ -93,6 +94,7 @@ const peopleCountText = computed(() => {
   if (!post.value) return '-'
   return `${post.value.currentCount} / ${post.value.needCount + 1}`
 })
+const postTypeLabel = computed(() => formatTypeLabel(post.value?.type || ''))
 
 function findRootCommentId(commentId, commentMap) {
   let current = commentMap.get(commentId)
@@ -261,7 +263,7 @@ watch(
           <div class="detail-header">
             <div>
               <h2>{{ post.title }}</h2>
-              <p>{{ post.type }} · {{ post.campus || '校区不限' }}</p>
+              <p>{{ postTypeLabel }} · {{ post.campus || '校区不限' }}</p>
             </div>
             <div class="detail-summary">
               <el-tag :type="post.status === 0 ? 'success' : 'info'" size="large">
@@ -529,12 +531,12 @@ watch(
 .people-badge {
   width: fit-content;
   padding: 10px 14px;
-  border: 1px solid rgba(64, 158, 255, 0.28);
+  border: 1px solid rgba(106, 44, 138, 0.18);
   border-radius: 18px;
   text-align: center;
   background:
-    linear-gradient(135deg, rgba(238, 244, 255, 0.96), rgba(247, 243, 255, 0.88));
-  box-shadow: 0 12px 24px rgba(64, 158, 255, 0.13);
+    linear-gradient(135deg, rgba(246, 247, 250, 0.96), rgba(248, 245, 251, 0.9));
+  box-shadow: 0 12px 24px rgba(71, 85, 105, 0.1);
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
@@ -624,6 +626,17 @@ watch(
   margin-top: 16px;
 }
 
+.actions :deep(.el-button:not(.el-button--primary):not(.el-button--danger)) {
+  background: rgba(255, 255, 255, 0.28);
+  border-color: rgba(123, 137, 156, 0.24);
+  color: #526173;
+}
+
+.actions :deep(.el-button:not(.el-button--primary):not(.el-button--danger):hover) {
+  background: rgba(255, 255, 255, 0.5);
+  border-color: rgba(79, 100, 127, 0.3);
+}
+
 .comment-create {
   margin-bottom: 12px;
 }
@@ -635,7 +648,7 @@ watch(
 
 .comment-submit {
   min-width: 104px;
-  box-shadow: 0 8px 18px rgba(23, 78, 166, 0.2);
+  box-shadow: 0 10px 20px rgba(71, 85, 105, 0.16);
 }
 
 .comment-login {
@@ -674,7 +687,7 @@ watch(
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, #409eff, #8b7cf6);
+  background: linear-gradient(135deg, #4f647f, #7a6b90);
   color: #fff;
   font-weight: 800;
 }
@@ -707,7 +720,7 @@ watch(
   margin-left: 24px;
   margin-bottom: 8px;
   padding-left: 12px;
-  border-left: 3px solid rgba(139, 124, 246, 0.34);
+  border-left: 3px solid rgba(122, 107, 144, 0.3);
   background: rgba(248, 251, 255, 0.78);
   border-radius: 0 14px 14px 0;
 }
@@ -806,7 +819,7 @@ watch(
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, rgba(64, 158, 255, 0.9), rgba(139, 124, 246, 0.9));
+  background: linear-gradient(135deg, rgba(79, 100, 127, 0.94), rgba(122, 107, 144, 0.94));
   color: #fff;
   font-weight: 900;
 }

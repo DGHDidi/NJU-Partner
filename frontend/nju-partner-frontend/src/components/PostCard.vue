@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { POST_STATUS_MAP } from '@/constants'
 import { formatDateTime, formatRelativeTime } from '@/utils/date'
+import { formatTypeLabel, getTypeEmoji } from '@/utils/typeDisplay'
 
 const props = defineProps({
   post: {
@@ -13,24 +14,18 @@ const props = defineProps({
 const emit = defineEmits(['click'])
 const totalCount = computed(() => (props.post.needCount ?? 0) + 1)
 const currentCount = computed(() => props.post.currentCount ?? 0)
+const typeEmoji = computed(() => getTypeEmoji(props.post.type || ''))
+const typeLabel = computed(() => formatTypeLabel(props.post.type || ''))
 const progress = computed(() => {
   if (!totalCount.value) return 0
   return Math.min(100, Math.round((currentCount.value / totalCount.value) * 100))
 })
-const typeIconMap = {
-  自习搭子: '📚',
-  运动搭子: '🏃',
-  竞赛组队: '🏆',
-  课程学习: '📝',
-  拼单: '🛍️',
-  饭搭子: '🍜',
-  短途出行: '🚌',
-  讲座同行: '🎤',
-  社团活动: '🎯',
-  跨校区同行: '🚇',
-  其他: '✨',
-}
-const typeIcon = computed(() => typeIconMap[props.post.type] || '✨')
+const progressColor = computed(() => {
+  if (progress.value >= 85) return '#d94841'
+  if (progress.value >= 60) return '#d99a22'
+  return '#2f9e72'
+})
+const typeMark = computed(() => (props.post.type || '组队').slice(0, 2))
 const publisherName = computed(() => props.post.publisher?.nickname || props.post.publisher?.username || '-')
 const avatarText = computed(() => (publisherName.value === '-' ? 'N' : publisherName.value.slice(0, 1).toUpperCase()))
 const statusType = computed(() => {
@@ -49,7 +44,7 @@ function handleClick() {
   <el-card class="post-card" shadow="hover" @click="handleClick">
     <div class="post-header">
       <div class="post-main-title">
-        <span class="type-icon">{{ typeIcon }}</span>
+        <span class="type-icon">{{ typeEmoji }}</span>
         <div>
           <h3 class="post-title">{{ post.title || '帖子标题占位' }}</h3>
           <div class="publisher-line">
@@ -69,7 +64,7 @@ function handleClick() {
             <span>{{ relativePublishTime }}</span>
           </div>
           <div class="post-badges">
-            <el-tag size="small" effect="plain">{{ post.type || '-' }}</el-tag>
+            <el-tag size="small" effect="plain">{{ typeLabel }}</el-tag>
             <el-tag size="small" type="info" effect="plain">{{ post.campus || '-' }}</el-tag>
             <el-tag size="small" :type="statusType">
               {{ POST_STATUS_MAP[post.status] ?? '招募中' }}
@@ -95,7 +90,7 @@ function handleClick() {
 
     <p class="post-desc">{{ post.description || '帖子描述占位' }}</p>
 
-    <el-progress :percentage="progress" :show-text="false" class="count-progress" />
+    <el-progress :percentage="progress" :show-text="false" :color="progressColor" class="count-progress" />
 
     <div class="post-footer">
       <span>还需 {{ Math.max(totalCount - currentCount, 0) }} 人</span>
@@ -110,7 +105,7 @@ function handleClick() {
   cursor: pointer;
   border-radius: 20px;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(247, 243, 255, 0.82)),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(248, 246, 251, 0.86)),
     #fff;
   animation: card-in 0.42s ease both;
   transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
@@ -121,7 +116,7 @@ function handleClick() {
   position: absolute;
   inset: 0 auto 0 0;
   width: 5px;
-  background: linear-gradient(180deg, #409eff, #8b7cf6);
+  background: linear-gradient(180deg, #4f647f, #7a6b90);
   opacity: 0.82;
 }
 
@@ -129,7 +124,7 @@ function handleClick() {
   transform: translateY(-3px) scale(1.006);
   border-color: rgba(106, 44, 138, 0.3);
   box-shadow:
-    0 24px 46px rgba(64, 158, 255, 0.16),
+    0 24px 46px rgba(71, 85, 105, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
@@ -156,9 +151,12 @@ function handleClick() {
   border-radius: 16px;
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, rgba(64, 158, 255, 0.16), rgba(139, 124, 246, 0.18));
+  background: linear-gradient(135deg, rgba(79, 100, 127, 0.12), rgba(122, 107, 144, 0.14));
   border: 1px solid rgba(106, 44, 138, 0.16);
-  font-size: 20px;
+  color: #5f526e;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
 }
 
 .post-title {
@@ -182,7 +180,7 @@ function handleClick() {
   border-radius: 50%;
   display: inline-grid;
   place-items: center;
-  background: linear-gradient(135deg, #409eff, #8b7cf6);
+  background: linear-gradient(135deg, #4f647f, #7a6b90);
   color: #fff;
   font-size: 12px;
   font-weight: 800;
@@ -217,7 +215,7 @@ function handleClick() {
   border-radius: 16px;
   text-align: center;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(241, 246, 250, 0.92));
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(246, 247, 250, 0.94));
   border: 1px solid rgba(106, 44, 138, 0.14);
   flex: 0 0 auto;
   display: flex;
