@@ -353,6 +353,7 @@ h2 {
 }
 
 .type-card {
+  position: relative;
   min-height: 42px;
   border: 1px solid rgba(106, 44, 138, 0.14);
   border-radius: 14px;
@@ -360,15 +361,26 @@ h2 {
   color: #526173;
   cursor: pointer;
   font-weight: 700;
-  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  overflow: hidden;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
 
-.type-card:hover,
+.type-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(14, 165, 183, 0.3);
+  color: var(--accent-aqua-deep);
+  box-shadow: 0 10px 22px rgba(14, 165, 183, 0.1);
+}
+
 .type-card.active {
   transform: translateY(-1px);
-  border-color: rgba(106, 44, 138, 0.3);
-  color: #4f647f;
-  box-shadow: 0 10px 22px rgba(71, 85, 105, 0.12);
+  border-color: var(--accent-aqua);
+  background:
+    linear-gradient(180deg, rgba(232, 250, 253, 0.96), rgba(255, 255, 255, 0.88));
+  color: #0f6475;
+  box-shadow:
+    0 0 0 1px rgba(14, 165, 183, 0.16),
+    0 12px 24px rgba(14, 165, 183, 0.14);
 }
 
 .grade-tags {
