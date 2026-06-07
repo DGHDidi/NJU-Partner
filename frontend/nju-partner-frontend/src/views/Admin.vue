@@ -103,6 +103,22 @@ function searchComments() {
   loadComments()
 }
 
+function getPostStatusTagClass(status) {
+  if (status === 0) return 'is-recruiting'
+  if (status === 1) return 'is-full'
+  if (status === 2) return 'is-closed'
+  if (status === 3) return 'is-expired'
+  return 'is-muted'
+}
+
+function getUserStatusText(status) {
+  return status === 0 ? '已封禁' : '正常'
+}
+
+function getUserStatusTagClass(status) {
+  return status === 0 ? 'is-banned' : 'is-normal'
+}
+
 onMounted(loadPosts)
 </script>
 
@@ -130,18 +146,24 @@ onMounted(loadPosts)
             <el-input v-model="postQuery.keyword" placeholder="搜索标题或描述" clearable />
             <el-button type="primary" @click="searchPosts">搜索</el-button>
           </div>
-          <el-table :data="postList" border>
-            <el-table-column prop="id" label="ID" width="80" />
-            <el-table-column prop="title" label="标题" min-width="180" />
-            <el-table-column prop="status" label="状态" width="120">
-              <template #default="scope">{{ POST_STATUS_MAP[scope.row.status] }}</template>
-            </el-table-column>
-            <el-table-column label="操作" width="120">
-              <template #default="scope">
-                <el-button type="danger" link @click="handleDeletePost(scope.row.id)">删除</el-button>
-              </template>
-            </el-table-column>
-          </el-table>
+          <div class="admin-table-frame">
+            <el-table :data="postList" border class="admin-table">
+              <el-table-column prop="id" label="ID" width="80" />
+              <el-table-column prop="title" label="标题" min-width="180" />
+              <el-table-column prop="status" label="状态" width="120">
+                <template #default="scope">
+                  <span class="status-pill" :class="getPostStatusTagClass(scope.row.status)">
+                    {{ POST_STATUS_MAP[scope.row.status] }}
+                  </span>
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="120">
+                <template #default="scope">
+                  <el-button type="danger" link @click="handleDeletePost(scope.row.id)">删除</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
           <el-pagination
             v-model:current-page="postQuery.pageNum"
             v-model:page-size="postQuery.pageSize"
@@ -157,21 +179,27 @@ onMounted(loadPosts)
             <el-input v-model="userQuery.keyword" placeholder="搜索用户名或昵称" clearable />
             <el-button type="primary" @click="searchUsers">搜索</el-button>
           </div>
-          <el-table :data="userList" border>
-            <el-table-column prop="id" label="ID" width="80" />
-            <el-table-column prop="username" label="用户名" min-width="120" />
-            <el-table-column prop="nickname" label="昵称" min-width="120" />
-            <el-table-column prop="status" label="状态" width="100">
-              <template #default="scope">{{ scope.row.status === 0 ? '已封禁' : '正常' }}</template>
-            </el-table-column>
-            <el-table-column label="操作" width="120">
-              <template #default="scope">
-                <el-button type="danger" link @click="handleToggleUser(scope.row)">
-                  {{ scope.row.status === 0 ? '解封' : '封禁' }}
-                </el-button>
-              </template>
-            </el-table-column>
-          </el-table>
+          <div class="admin-table-frame">
+            <el-table :data="userList" border class="admin-table">
+              <el-table-column prop="id" label="ID" width="80" />
+              <el-table-column prop="username" label="用户名" min-width="120" />
+              <el-table-column prop="nickname" label="昵称" min-width="120" />
+              <el-table-column prop="status" label="状态" width="100">
+                <template #default="scope">
+                  <span class="status-pill" :class="getUserStatusTagClass(scope.row.status)">
+                    {{ getUserStatusText(scope.row.status) }}
+                  </span>
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="120">
+                <template #default="scope">
+                  <el-button type="danger" link @click="handleToggleUser(scope.row)">
+                    {{ scope.row.status === 0 ? '解封' : '封禁' }}
+                  </el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
           <el-pagination
             v-model:current-page="userQuery.pageNum"
             v-model:page-size="userQuery.pageSize"
@@ -187,16 +215,18 @@ onMounted(loadPosts)
             <el-input v-model="commentQuery.keyword" placeholder="搜索评论内容" clearable />
             <el-button type="primary" @click="searchComments">搜索</el-button>
           </div>
-          <el-table :data="commentList" border>
-            <el-table-column prop="id" label="ID" width="80" />
-            <el-table-column prop="postTitle" label="帖子" min-width="160" />
-            <el-table-column prop="content" label="内容" min-width="220" />
-            <el-table-column label="操作" width="120">
-              <template #default="scope">
-                <el-button type="danger" link @click="handleDeleteComment(scope.row.id)">删除</el-button>
-              </template>
-            </el-table-column>
-          </el-table>
+          <div class="admin-table-frame">
+            <el-table :data="commentList" border class="admin-table">
+              <el-table-column prop="id" label="ID" width="80" />
+              <el-table-column prop="postTitle" label="帖子" min-width="160" />
+              <el-table-column prop="content" label="内容" min-width="220" />
+              <el-table-column label="操作" width="120">
+                <template #default="scope">
+                  <el-button type="danger" link @click="handleDeleteComment(scope.row.id)">删除</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
           <el-pagination
             v-model:current-page="commentQuery.pageNum"
             v-model:page-size="commentQuery.pageSize"
@@ -309,9 +339,108 @@ h2 {
   border-left-color: rgba(123, 137, 156, 0.16);
 }
 
-.page-main :deep(.el-table) {
-  border-radius: 14px;
-  border: 1px solid rgba(123, 137, 156, 0.18);
+.admin-table-frame {
+  position: relative;
+  padding: 1px;
+  border-radius: 18px;
+  border: 0;
+  overflow: hidden;
+  background: rgba(123, 137, 156, 0.28);
+}
+
+.admin-table {
+  border: 0;
+  border-radius: 17px;
+  --el-table-border-color: rgba(123, 137, 156, 0.18);
+}
+
+.admin-table :deep(.el-table__inner-wrapper) {
+  border-radius: 17px;
+}
+
+.admin-table :deep(.el-table__inner-wrapper::before),
+.admin-table :deep(.el-table::before),
+.admin-table :deep(.el-table::after) {
+  display: none;
+}
+
+.admin-table :deep(.el-table__border-left-patch) {
+  display: none;
+}
+
+.admin-table :deep(.el-table__cell) {
+  border-color: rgba(123, 137, 156, 0.18);
+}
+
+.admin-table :deep(th.el-table__cell) {
+  border-bottom-color: rgba(123, 137, 156, 0.18);
+  background: #f6f8fb;
+}
+
+.admin-table :deep(.el-table__row:last-child td.el-table__cell) {
+  border-bottom: 0;
+}
+
+.admin-table :deep(th.el-table__cell:first-child),
+.admin-table :deep(td.el-table__cell:first-child) {
+  border-left: 0;
+}
+
+.admin-table :deep(th.el-table__cell:last-child),
+.admin-table :deep(td.el-table__cell:last-child) {
+  border-right: 0;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.status-pill::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.9;
+}
+
+.status-pill.is-recruiting,
+.status-pill.is-normal {
+  color: #2f8f6b;
+  border-color: rgba(47, 143, 107, 0.22);
+  background: rgba(47, 143, 107, 0.08);
+}
+
+.status-pill.is-full {
+  color: #a06a16;
+  border-color: rgba(217, 154, 34, 0.26);
+  background: rgba(217, 154, 34, 0.1);
+}
+
+.status-pill.is-closed,
+.status-pill.is-expired,
+.status-pill.is-muted {
+  color: #66758a;
+  border-color: rgba(102, 117, 138, 0.22);
+  background: rgba(102, 117, 138, 0.08);
+}
+
+.status-pill.is-banned {
+  color: #bd4d4d;
+  border-color: rgba(189, 77, 77, 0.24);
+  background: rgba(189, 77, 77, 0.08);
 }
 
 .page-main :deep(.el-input__wrapper) {
