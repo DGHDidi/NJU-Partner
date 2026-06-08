@@ -26,18 +26,18 @@ public class CommentController {
     }
 
     @PostMapping("/posts/{id}/comments")
-    public Result<Void> create(@PathVariable Long id, @Valid @RequestBody CommentCreateDTO dto) {
-        commentService.createComment(id, dto.getContent());
+    public Result<Void> createComment(@PathVariable Long id, @Valid @RequestBody CommentCreateDTO dto) {
+        commentService.createComment(id, dto.getContent(), dto.getParentId());
         return Result.success();
     }
 
     @GetMapping("/posts/{id}/comments")
-    public Result<List<CommentVO>> getByPost(@PathVariable Long id) {
-        return Result.success(commentService.getComments(id));
+    public Result<List<CommentVO>> getComments(@PathVariable Long id) {
+        return Result.success(commentService.getPostComments(id));
     }
 
     @DeleteMapping("/comments/{id}")
-    public Result<Void> delete(@PathVariable Long id) {
+    public Result<Void> deleteComment(@PathVariable Long id) {
         commentService.deleteComment(id);
         return Result.success();
     }

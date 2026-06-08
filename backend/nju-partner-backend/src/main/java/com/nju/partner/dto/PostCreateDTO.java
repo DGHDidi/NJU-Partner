@@ -42,6 +42,7 @@ public class PostCreateDTO {
     @Size(max = 100, message = "专业限制长度不能超过100")
     private String majorLimit;
 
+    @NotBlank(message = "联系方式不能为空")
     @Size(max = 100, message = "联系方式长度不能超过100")
     private String contact;
 }

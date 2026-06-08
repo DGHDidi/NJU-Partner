@@ -8,6 +8,7 @@ import { CAMPUS_OPTIONS, GRADE_OPTIONS } from '@/constants'
 const router = useRouter()
 const formRef = ref()
 const loading = ref(false)
+const isShaking = ref(false)
 
 const form = reactive({
   username: '',
@@ -68,9 +69,29 @@ const rules = {
   ],
 }
 
+function showValidationFeedback() {
+  ElMessage.warning('请先修正表单中的红色提示项')
+  isShaking.value = false
+  requestAnimationFrame(() => {
+    isShaking.value = true
+    window.setTimeout(() => {
+      isShaking.value = false
+    }, 420)
+  })
+
+  window.setTimeout(() => {
+    const firstError = document.querySelector('.auth-card .el-form-item.is-error input, .auth-card .el-form-item.is-error textarea')
+    firstError?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    firstError?.focus()
+  }, 80)
+}
+
 async function handleRegister() {
   const valid = await formRef.value?.validate().catch(() => false)
-  if (!valid) return
+  if (!valid) {
+    showValidationFeedback()
+    return
+  }
 
   loading.value = true
   try {
@@ -84,8 +105,6 @@ async function handleRegister() {
     })
     ElMessage.success('注册成功，请登录')
     router.push({ name: 'Login' })
-  } catch {
-    // 错误提示由 request.js 统一处理
   } finally {
     loading.value = false
   }
@@ -94,10 +113,15 @@ async function handleRegister() {
 
 <template>
   <div class="page page-auth">
-    <el-card class="auth-card">
+    <el-card class="auth-card" :class="{ 'is-shaking': isShaking }">
       <template #header>
-        <h2>注册</h2>
-        <p class="subtitle">加入南大轻搭子，找到你的校园搭子</p>
+        <div class="register-header">
+          <span class="register-mark">N</span>
+          <div>
+            <h2>创建账号</h2>
+            <p class="subtitle">加入南大轻搭子，找到你的校园搭子</p>
+          </div>
+        </div>
       </template>
 
       <el-form
@@ -153,7 +177,7 @@ async function handleRegister() {
           <el-input v-model="form.major" placeholder="请输入专业" clearable />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :loading="loading" @click="handleRegister">
+          <el-button class="register-btn" type="primary" :loading="loading" @click="handleRegister">
             注册
           </el-button>
           <el-button link type="primary" @click="router.push({ name: 'Login' })">
@@ -172,22 +196,93 @@ async function handleRegister() {
   align-items: center;
   justify-content: center;
   padding: 24px;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(82, 99, 132, 0.16), transparent 28%),
+    radial-gradient(circle at 88% 12%, rgba(116, 103, 137, 0.14), transparent 30%),
+    linear-gradient(145deg, rgba(243, 246, 249, 0.98), rgba(247, 245, 248, 0.94));
 }
 
 .auth-card {
-  width: 480px;
+  width: min(560px, 100%);
+  border-radius: 22px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.86));
+  box-shadow:
+    0 28px 64px rgba(42, 52, 66, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.auth-card.is-shaking {
+  animation: form-shake 0.42s ease;
+}
+
+.register-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.register-mark {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-weight: 800;
+  background: linear-gradient(135deg, #44546a, #63714f);
+  box-shadow: 0 12px 24px rgba(68, 84, 106, 0.22);
 }
 
 .auth-card h2 {
   margin: 0;
-  text-align: center;
-  color: #303133;
+  color: #172033;
 }
 
 .subtitle {
-  margin: 8px 0 0;
-  text-align: center;
+  margin: 6px 0 0;
   font-size: 13px;
-  color: #909399;
+  color: #738295;
+}
+
+.auth-card :deep(.el-form-item__label) {
+  color: #526173;
+  font-weight: 700;
+}
+
+.auth-card :deep(.el-input__wrapper),
+.auth-card :deep(.el-select__wrapper) {
+  min-height: 42px;
+  border-radius: 12px;
+}
+
+.auth-card :deep(.el-input__wrapper.is-focus),
+.auth-card :deep(.el-select__wrapper.is-focused) {
+  box-shadow:
+    0 0 0 1px #44546a inset,
+    0 0 0 3px rgba(68, 84, 106, 0.1);
+}
+
+.register-btn {
+  min-width: 112px;
+  border-radius: 14px;
+  box-shadow: 0 12px 24px rgba(68, 84, 106, 0.22);
+}
+
+@keyframes form-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  20%,
+  60% {
+    transform: translateX(-8px);
+  }
+
+  40%,
+  80% {
+    transform: translateX(8px);
+  }
 }
 </style>

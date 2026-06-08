@@ -10,9 +10,11 @@ public class ApplicationVO {
     private Long id;
     private Long postId;
     private Long userId;
-    private UserVO applicant;
     private String message;
     private Integer status;
     private LocalDateTime createdTime;
     private LocalDateTime updatedTime;
+    private UserVO applicant;
+    private String postTitle;
+    private Integer postStatus;
 }

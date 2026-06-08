@@ -8,10 +8,13 @@ import com.nju.partner.common.BaseContext;
 import com.nju.partner.common.ResultCode;
 import com.nju.partner.dto.PostCreateDTO;
 import com.nju.partner.dto.PostQueryDTO;
+import com.nju.partner.entity.Application;
 import com.nju.partner.entity.Post;
 import com.nju.partner.entity.User;
+import com.nju.partner.mapper.ApplicationMapper;
 import com.nju.partner.exception.BusinessException;
 import com.nju.partner.mapper.PostMapper;
+import com.nju.partner.service.FavoriteService;
 import com.nju.partner.service.PostService;
 import com.nju.partner.service.UserService;
 import com.nju.partner.vo.PostVO;
@@ -22,13 +25,23 @@ import org.springframework.util.StringUtils;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 @Service
 public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements PostService {
 
     private final UserService userService;
+    private final FavoriteService favoriteService;
+    private final ApplicationMapper applicationMapper;
 
-    public PostServiceImpl(UserService userService) {
+    public PostServiceImpl(UserService userService, FavoriteService favoriteService, ApplicationMapper applicationMapper) {
         this.userService = userService;
+        this.favoriteService = favoriteService;
+        this.applicationMapper = applicationMapper;
     }
 
     @Override
@@ -49,6 +62,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         if (userId == null) {
             throw new BusinessException(ResultCode.UNAUTHORIZED);
         }
+        validatePostPayload(dto);
 
         Post post = new Post();
         post.setUserId(userId);
@@ -58,11 +72,11 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         post.setLocation(dto.getLocation());
         post.setActivityTime(dto.getActivityTime());
         post.setNeedCount(dto.getNeedCount());
-        post.setCurrentCount(0);
+        post.setCurrentCount(1);
         post.setCampus(dto.getCampus().trim());
         post.setGradeLimit(dto.getGradeLimit());
         post.setMajorLimit(dto.getMajorLimit());
-        post.setContact(dto.getContact());
+        post.setContact(dto.getContact().trim());
         post.setStatus(0);
         this.save(post);
     }
@@ -80,8 +94,18 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         if (query.getStatus() != null) {
             wrapper.eq(Post::getStatus, query.getStatus());
         }
+        if (query.getUserId() != null) {
+            wrapper.eq(Post::getUserId, query.getUserId());
+        }
         if (StringUtils.hasText(query.getGrade())) {
-            wrapper.eq(Post::getGradeLimit, query.getGrade().trim());
+            String grade = query.getGrade().trim();
+            wrapper.and(w -> w.isNull(Post::getGradeLimit)
+                    .or()
+                    .eq(Post::getGradeLimit, "")
+                    .or()
+                    .eq(Post::getGradeLimit, "不限")
+                    .or()
+                    .like(Post::getGradeLimit, grade));
         }
         if (query.getStartTime() != null) {
             wrapper.ge(Post::getActivityTime, query.getStartTime());
@@ -100,8 +124,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
         Page<Post> page = new Page<>(query.getPageNum(), query.getPageSize());
         Page<Post> postPage = this.page(page, wrapper);
-
-        return postPage.convert(this::toPostVO);
+        return buildPostPage(postPage);
     }
 
     @Override
@@ -110,13 +133,14 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         if (post == null) {
             throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "帖子不存在");
         }
-        return toPostVO(post);
+        return toPostVO(post, Collections.emptyMap(), Collections.emptyMap());
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updatePost(Long postId, PostCreateDTO dto) {
         Post post = checkOwner(postId);
+        validatePostPayload(dto);
 
         post.setTitle(dto.getTitle().trim());
         post.setType(dto.getType().trim());
@@ -127,7 +151,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         post.setCampus(dto.getCampus().trim());
         post.setGradeLimit(dto.getGradeLimit());
         post.setMajorLimit(dto.getMajorLimit());
-        post.setContact(dto.getContact());
+        post.setContact(dto.getContact().trim());
         this.updateById(post);
     }
 
@@ -164,7 +188,20 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         return post;
     }
 
-    private PostVO toPostVO(Post post) {
+    private IPage<PostVO> buildPostPage(Page<Post> postPage) {
+        List<Post> posts = postPage.getRecords();
+        List<Long> userIds = posts.stream().map(Post::getUserId).distinct().toList();
+        List<Long> postIds = posts.stream().map(Post::getId).toList();
+        Map<Long, User> userMap = userIds.isEmpty() ? Collections.emptyMap() :
+                userService.listByIds(userIds).stream().collect(Collectors.toMap(User::getId, item -> item));
+        Map<Long, Boolean> favoriteMap = favoriteService.getFavoritedStatusMap(BaseContext.getCurrentUserId(), postIds);
+
+        Page<PostVO> result = new Page<>(postPage.getCurrent(), postPage.getSize(), postPage.getTotal());
+        result.setRecords(posts.stream().map(post -> toPostVO(post, userMap, favoriteMap)).toList());
+        return result;
+    }
+
+    private PostVO toPostVO(Post post, Map<Long, User> userMap, Map<Long, Boolean> favoriteMap) {
         PostVO vo = new PostVO();
         vo.setId(post.getId());
         vo.setUserId(post.getUserId());
@@ -174,7 +211,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         vo.setLocation(post.getLocation());
         vo.setActivityTime(post.getActivityTime());
         vo.setNeedCount(post.getNeedCount());
-        vo.setCurrentCount(post.getCurrentCount());
+        vo.setCurrentCount(resolveCurrentCount(post));
         vo.setCampus(post.getCampus());
         vo.setGradeLimit(post.getGradeLimit());
         vo.setMajorLimit(post.getMajorLimit());
@@ -183,7 +220,10 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         vo.setCreatedTime(post.getCreatedTime());
         vo.setUpdatedTime(post.getUpdatedTime());
 
-        User user = userService.getById(post.getUserId());
+        User user = userMap.get(post.getUserId());
+        if (user == null) {
+            user = userService.getById(post.getUserId());
+        }
         if (user != null) {
             UserVO userVO = new UserVO();
             userVO.setId(user.getId());
@@ -194,9 +234,30 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             userVO.setGrade(user.getGrade());
             userVO.setMajor(user.getMajor());
             userVO.setRole(user.getRole());
+            userVO.setStatus(user.getStatus());
             vo.setPublisher(userVO);
         }
 
+        if (!favoriteMap.isEmpty()) {
+            vo.setFavorited(favoriteMap.getOrDefault(post.getId(), false));
+        } else {
+            Long currentUserId = BaseContext.getCurrentUserId();
+            vo.setFavorited(currentUserId != null && favoriteService.isFavorited(currentUserId, post.getId()));
+        }
+
         return vo;
+    }
+
+    private int resolveCurrentCount(Post post) {
+        Long approvedCount = applicationMapper.selectCount(new LambdaQueryWrapper<Application>()
+                .eq(Application::getPostId, post.getId())
+                .eq(Application::getStatus, 1));
+        return approvedCount.intValue() + 1;
+    }
+
+    private void validatePostPayload(PostCreateDTO dto) {
+        if (dto.getActivityTime() != null && !dto.getActivityTime().isAfter(LocalDateTime.now())) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "活动时间必须晚于当前时间");
+        }
     }
 }

@@ -25,6 +25,11 @@ export function unbanUser(id) {
   return request.put(`/admin/users/${id}/unban`)
 }
 
+/** 查看评论 GET /api/admin/comments */
+export function getAdminComments(params) {
+  return request.get('/admin/comments', { params })
+}
+
 /** 删除评论（管理员） DELETE /api/comments/{id} */
 export function deleteAdminComment(id) {
   return request.delete(`/comments/${id}`)

@@ -10,6 +10,7 @@ import com.nju.partner.entity.User;
 import com.nju.partner.exception.BusinessException;
 import com.nju.partner.mapper.ApplicationMapper;
 import com.nju.partner.service.ApplicationService;
+import com.nju.partner.service.NotificationService;
 import com.nju.partner.service.PostService;
 import com.nju.partner.service.UserService;
 import com.nju.partner.vo.ApplicationVO;
@@ -25,10 +26,12 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
 
     private final PostService postService;
     private final UserService userService;
+    private final NotificationService notificationService;
 
-    public ApplicationServiceImpl(PostService postService, UserService userService) {
+    public ApplicationServiceImpl(PostService postService, UserService userService, NotificationService notificationService) {
         this.postService = postService;
         this.userService = userService;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -62,19 +65,37 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
             throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "只有招募中的帖子可以报名");
         }
 
-        long count = this.count(new LambdaQueryWrapper<Application>()
+        Application application = this.getOne(new LambdaQueryWrapper<Application>()
                 .eq(Application::getPostId, postId)
-                .eq(Application::getUserId, userId));
-        if (count > 0) {
+                .eq(Application::getUserId, userId)
+                .last("LIMIT 1"));
+        if (application != null && (application.getStatus() == 0 || application.getStatus() == 1)) {
             throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "你已经报名过该帖子，不能重复报名");
         }
 
-        Application application = new Application();
-        application.setPostId(postId);
-        application.setUserId(userId);
-        application.setMessage(message);
-        application.setStatus(0);
-        this.save(application);
+        if (application == null) {
+            application = new Application();
+            application.setPostId(postId);
+            application.setUserId(userId);
+            application.setMessage(message);
+            application.setStatus(0);
+            this.save(application);
+        } else {
+            application.setMessage(message);
+            application.setStatus(0);
+            this.updateById(application);
+        }
+
+        User applicant = userService.getById(userId);
+        String applicantName = applicant == null ? "有同学" : (applicant.getNickname() != null ? applicant.getNickname() : applicant.getUsername());
+        notificationService.createNotification(
+                post.getUserId(),
+                "APPLICATION_CREATED",
+                "新的报名申请",
+                applicantName + " 报名了你的帖子《" + post.getTitle() + "》",
+                postId,
+                null,
+                application.getId());
     }
 
     @Override
@@ -99,6 +120,39 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
     }
 
     @Override
+    public ApplicationVO getMyApplication(Long postId) {
+        Long userId = BaseContext.getCurrentUserId();
+        if (userId == null) {
+            throw new BusinessException(ResultCode.UNAUTHORIZED);
+        }
+        Post post = postService.getById(postId);
+        if (post == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "甯栧瓙涓嶅瓨鍦?");
+        }
+
+        Application application = this.getOne(new LambdaQueryWrapper<Application>()
+                .eq(Application::getPostId, postId)
+                .eq(Application::getUserId, userId)
+                .orderByDesc(Application::getUpdatedTime)
+                .last("LIMIT 1"));
+        return application == null ? null : toApplicationVO(application);
+    }
+
+    @Override
+    public List<ApplicationVO> getApprovedMembers(Long postId) {
+        Post post = postService.getById(postId);
+        if (post == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "甯栧瓙涓嶅瓨鍦?");
+        }
+
+        List<Application> applications = this.list(new LambdaQueryWrapper<Application>()
+                .eq(Application::getPostId, postId)
+                .eq(Application::getStatus, 1)
+                .orderByDesc(Application::getUpdatedTime));
+        return applications.stream().map(this::toApplicationVO).collect(Collectors.toList());
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public void passApplication(Long applicationId) {
         Application application = checkOwnershipAndGet(applicationId, true);
@@ -106,16 +160,39 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
             throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "只能通过待审核的报名");
         }
 
+        Post post = postService.getById(application.getPostId());
+        if (post == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "帖子不存在");
+        }
+        if (post.getStatus() != 0) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "只有招募中的帖子可以通过报名");
+        }
+
+        long approvedCount = this.count(new LambdaQueryWrapper<Application>()
+                .eq(Application::getPostId, post.getId())
+                .eq(Application::getStatus, 1));
+        if (post.getNeedCount() != null && approvedCount >= post.getNeedCount()) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "帖子人数已满");
+        }
+
         application.setStatus(1);
         this.updateById(application);
 
-        Post post = postService.getById(application.getPostId());
-        int newCount = post.getCurrentCount() + 1;
+        int newCount = (int) approvedCount + 2;
         post.setCurrentCount(newCount);
-        if (newCount >= post.getNeedCount()) {
+        if (post.getNeedCount() != null && newCount >= post.getNeedCount() + 1) {
             post.setStatus(1);
         }
         postService.updateById(post);
+
+        notificationService.createNotification(
+                application.getUserId(),
+                "APPLICATION_PASSED",
+                "报名已通过",
+                "你报名的帖子《" + post.getTitle() + "》已通过审核",
+                post.getId(),
+                null,
+                application.getId());
     }
 
     @Override
@@ -127,6 +204,16 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
         }
         application.setStatus(2);
         this.updateById(application);
+
+        Post post = postService.getById(application.getPostId());
+        notificationService.createNotification(
+                application.getUserId(),
+                "APPLICATION_REJECTED",
+                "报名被拒绝",
+                "你报名的帖子《" + (post == null ? "未知帖子" : post.getTitle()) + "》未通过审核",
+                application.getPostId(),
+                null,
+                application.getId());
     }
 
     @Override
@@ -154,6 +241,9 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
         }
         if (checkPostOwner) {
             Post post = postService.getById(application.getPostId());
+            if (post == null) {
+                throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "帖子不存在");
+            }
             if (!post.getUserId().equals(userId)) {
                 throw new BusinessException(ResultCode.FORBIDDEN.getCode(), "只有帖子发布者可以操作报名");
             }
@@ -174,6 +264,11 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
         vo.setStatus(application.getStatus());
         vo.setCreatedTime(application.getCreatedTime());
         vo.setUpdatedTime(application.getUpdatedTime());
+        Post post = postService.getById(application.getPostId());
+        if (post != null) {
+            vo.setPostTitle(post.getTitle());
+            vo.setPostStatus(post.getStatus());
+        }
 
         User user = userService.getById(application.getUserId());
         if (user != null) {

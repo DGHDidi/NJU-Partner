@@ -10,7 +10,7 @@ export function removeFavorite(postId) {
   return request.delete(`/posts/${postId}/favorite`)
 }
 
-/** 查看我的收藏 GET /api/user/favorites */
+/** 查看我的收藏 GET /api/user/my-favorites */
 export function getFavoriteList(params) {
-  return request.get('/user/favorites', { params })
+  return request.get('/user/my-favorites', { params })
 }

@@ -1,29 +1,55 @@
 package com.nju.partner.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nju.partner.common.BaseContext;
 import com.nju.partner.common.ResultCode;
 import com.nju.partner.dto.UserLoginDTO;
 import com.nju.partner.dto.UserRegisterDTO;
+import com.nju.partner.dto.UserUpdateDTO;
+import com.nju.partner.entity.Application;
+import com.nju.partner.entity.Post;
 import com.nju.partner.entity.User;
 import com.nju.partner.exception.BusinessException;
+import com.nju.partner.mapper.ApplicationMapper;
+import com.nju.partner.mapper.PostMapper;
 import com.nju.partner.mapper.UserMapper;
+import com.nju.partner.service.FavoriteService;
+import com.nju.partner.service.UserService;
 import com.nju.partner.utils.JwtUtils;
 import com.nju.partner.service.UserService;
 import com.nju.partner.utils.PasswordUtils;
+import com.nju.partner.vo.ApplicationVO;
 import com.nju.partner.vo.LoginVO;
+import com.nju.partner.vo.PostVO;
 import com.nju.partner.vo.UserVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
     private final JwtUtils jwtUtils;
+    private final PostMapper postMapper;
+    private final ApplicationMapper applicationMapper;
+    private final FavoriteService favoriteService;
 
-    public UserServiceImpl(JwtUtils jwtUtils) {
+    public UserServiceImpl(JwtUtils jwtUtils,
+                           PostMapper postMapper,
+                           ApplicationMapper applicationMapper,
+                           FavoriteService favoriteService) {
         this.jwtUtils = jwtUtils;
+        this.postMapper = postMapper;
+        this.applicationMapper = applicationMapper;
+        this.favoriteService = favoriteService;
     }
 
     @Override
@@ -83,15 +109,122 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public UserVO getCurrentUserProfile() {
-        Long userId = BaseContext.getCurrentUserId();
-        if (userId == null) {
-            throw new BusinessException(ResultCode.UNAUTHORIZED);
-        }
-        User user = this.getById(userId);
-        if (user == null) {
-            throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "用户不存在");
-        }
+        User user = getCurrentUserEntity();
         return toUserVO(user);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public UserVO updateCurrentUserProfile(UserUpdateDTO dto) {
+        User user = getCurrentUserEntity();
+
+        if (StringUtils.hasText(dto.getNickname())) {
+            user.setNickname(normalize(dto.getNickname()));
+        }
+        if (dto.getAvatar() != null) {
+            user.setAvatar(normalize(dto.getAvatar()));
+        }
+        if (StringUtils.hasText(dto.getCampus())) {
+            user.setCampus(normalizeCampus(dto.getCampus()));
+        }
+        if (StringUtils.hasText(dto.getGrade())) {
+            user.setGrade(normalizeGrade(dto.getGrade()));
+        }
+        if (dto.getMajor() != null) {
+            user.setMajor(normalize(dto.getMajor()));
+        }
+
+        this.updateById(user);
+        return toUserVO(user);
+    }
+
+    @Override
+    public IPage<PostVO> getMyPosts(Integer pageNum, Integer pageSize) {
+        Long userId = currentUserId();
+        Page<Post> page = postMapper.selectPage(new Page<>(safePageNum(pageNum), safePageSize(pageSize)),
+                new LambdaQueryWrapper<Post>()
+                        .eq(Post::getUserId, userId)
+                        .orderByDesc(Post::getCreatedTime));
+        return buildPostPage(page, userId);
+    }
+
+    @Override
+    public IPage<ApplicationVO> getMyApplications(Integer pageNum, Integer pageSize) {
+        Long userId = currentUserId();
+        Page<Application> page = applicationMapper.selectPage(new Page<>(safePageNum(pageNum), safePageSize(pageSize)),
+                new LambdaQueryWrapper<Application>()
+                        .eq(Application::getUserId, userId)
+                        .orderByDesc(Application::getCreatedTime));
+        List<Long> postIds = page.getRecords().stream().map(Application::getPostId).distinct().toList();
+        Map<Long, Post> postMap = postIds.isEmpty() ? Collections.emptyMap() :
+                postMapper.selectBatchIds(postIds).stream().collect(Collectors.toMap(Post::getId, item -> item));
+        Page<ApplicationVO> result = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
+        result.setRecords(page.getRecords().stream().map(item -> toMyApplicationVO(item, postMap)).toList());
+        return result;
+    }
+
+    @Override
+    public IPage<PostVO> getMyFavorites(Integer pageNum, Integer pageSize) {
+        return favoriteService.getMyFavorites(pageNum, pageSize);
+    }
+
+    private ApplicationVO toMyApplicationVO(Application application, Map<Long, Post> postMap) {
+        ApplicationVO vo = new ApplicationVO();
+        vo.setId(application.getId());
+        vo.setPostId(application.getPostId());
+        vo.setUserId(application.getUserId());
+        vo.setMessage(application.getMessage());
+        vo.setStatus(application.getStatus());
+        vo.setCreatedTime(application.getCreatedTime());
+        vo.setUpdatedTime(application.getUpdatedTime());
+
+        Post post = postMap.get(application.getPostId());
+        if (post != null) {
+            vo.setPostTitle(post.getTitle());
+            vo.setPostStatus(post.getStatus());
+        }
+        return vo;
+    }
+
+    private IPage<PostVO> buildPostPage(Page<Post> page, Long currentUserId) {
+        List<Post> posts = page.getRecords();
+        List<Long> postIds = posts.stream().map(Post::getId).toList();
+        List<Long> publisherIds = posts.stream().map(Post::getUserId).distinct().toList();
+        Map<Long, User> userMap = publisherIds.isEmpty() ? Collections.emptyMap() :
+                this.listByIds(publisherIds).stream().collect(Collectors.toMap(User::getId, item -> item));
+        Map<Long, Boolean> favoriteMap = favoriteService.getFavoritedStatusMap(currentUserId, postIds);
+
+        Page<PostVO> result = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
+        result.setRecords(posts.stream().map(post -> toPostVO(post, userMap, favoriteMap)).toList());
+        return result;
+    }
+
+    private PostVO toPostVO(Post post, Map<Long, User> userMap, Map<Long, Boolean> favoriteMap) {
+        PostVO vo = new PostVO();
+        vo.setId(post.getId());
+        vo.setUserId(post.getUserId());
+        vo.setTitle(post.getTitle());
+        vo.setType(post.getType());
+        vo.setDescription(post.getDescription());
+        vo.setLocation(post.getLocation());
+        vo.setActivityTime(post.getActivityTime());
+        vo.setNeedCount(post.getNeedCount());
+        vo.setCurrentCount(post.getCurrentCount());
+        vo.setCampus(post.getCampus());
+        vo.setGradeLimit(post.getGradeLimit());
+        vo.setMajorLimit(post.getMajorLimit());
+        vo.setContact(post.getContact());
+        vo.setStatus(post.getStatus());
+        vo.setCreatedTime(post.getCreatedTime());
+        vo.setUpdatedTime(post.getUpdatedTime());
+
+        User publisher = userMap.get(post.getUserId());
+        if (publisher != null) {
+            vo.setPublisher(toUserVO(publisher));
+        }
+
+        vo.setFavorited(favoriteMap.getOrDefault(post.getId(), false));
+        return vo;
     }
 
     private UserVO toUserVO(User user) {
@@ -104,7 +237,33 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         vo.setGrade(user.getGrade());
         vo.setMajor(user.getMajor());
         vo.setRole(user.getRole());
+        vo.setStatus(user.getStatus());
         return vo;
+    }
+
+    private User getCurrentUserEntity() {
+        Long userId = currentUserId();
+        User user = this.getById(userId);
+        if (user == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "用户不存在");
+        }
+        return user;
+    }
+
+    private Long currentUserId() {
+        Long userId = BaseContext.getCurrentUserId();
+        if (userId == null) {
+            throw new BusinessException(ResultCode.UNAUTHORIZED);
+        }
+        return userId;
+    }
+
+    private Integer safePageNum(Integer pageNum) {
+        return pageNum == null || pageNum < 1 ? 1 : pageNum;
+    }
+
+    private Integer safePageSize(Integer pageSize) {
+        return pageSize == null || pageSize < 1 ? 10 : Math.min(pageSize, 50);
     }
 
     private String normalize(String value) {
@@ -129,4 +288,3 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return normalized == null ? null : normalized.replaceAll("\\s+", "");
     }
 }
-

@@ -10,12 +10,19 @@ body {
   padding: 0;
   min-height: 100%;
   font-family:
+    'Geist',
+    'Inter',
     'Segoe UI',
     'PingFang SC',
     'Microsoft YaHei',
     sans-serif;
-  background: #f5f7fa;
-  color: #303133;
+  background:
+    radial-gradient(circle at 8% 12%, rgba(82, 99, 132, 0.16), transparent 28%),
+    radial-gradient(circle at 88% 6%, rgba(116, 103, 137, 0.14), transparent 30%),
+    radial-gradient(circle at 72% 88%, rgba(87, 122, 112, 0.11), transparent 28%),
+    linear-gradient(145deg, #f3f6f9 0%, #f7f5f8 48%, #f0f6f3 100%);
+  color: #263445;
+  font-size: 14px;
 }
 
 #app {
@@ -28,6 +35,226 @@ a {
 }
 
 .page {
+  position: relative;
   min-height: 100vh;
-  background: #f5f7fa;
+  background:
+    radial-gradient(circle at 18% 24%, rgba(82, 99, 132, 0.1), transparent 24%),
+    radial-gradient(circle at 84% 32%, rgba(116, 103, 137, 0.1), transparent 26%),
+    linear-gradient(90deg, rgba(73, 85, 103, 0.035) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(73, 85, 103, 0.026) 1px, transparent 1px),
+    transparent;
+  background-size: auto, auto, 48px 48px, 48px 48px;
+}
+
+.page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 16% 70%, rgba(82, 99, 132, 0.12), transparent 24%),
+    radial-gradient(circle at 92% 74%, rgba(116, 103, 137, 0.1), transparent 24%),
+    linear-gradient(115deg, rgba(255, 255, 255, 0.36), transparent 42%);
+  filter: blur(54px);
+  opacity: 0.5;
+}
+
+.el-card {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(106, 44, 138, 0.15);
+  border-radius: 18px;
+  box-shadow:
+    0 18px 44px rgba(71, 85, 105, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.74);
+}
+
+.el-card:hover {
+  border-color: rgba(79, 100, 127, 0.28);
+}
+
+.el-card__header {
+  padding: 18px 22px;
+  border-bottom: 1px solid rgba(237, 241, 247, 0.86);
+  color: #1f2d3d;
+  font-weight: 700;
+}
+
+.el-card__body {
+  padding: 22px;
+}
+
+.el-button {
+  font-weight: 600;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.34);
+  border-color: rgba(123, 137, 156, 0.24);
+  color: #405169;
+  box-shadow: none;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.el-button:not(.is-disabled):hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.52);
+  border-color: rgba(79, 100, 127, 0.34);
+  color: #253348;
+}
+
+.el-button.is-link {
+  color: #42556e;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.el-button.is-link:hover {
+  color: #63714f;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+.el-button--primary {
+  --el-button-bg-color: #44546a;
+  --el-button-border-color: #44546a;
+  --el-button-hover-bg-color: #5c5669;
+  --el-button-hover-border-color: #5c5669;
+  --el-button-active-bg-color: #354357;
+  --el-button-active-border-color: #354357;
+  background: #44546a;
+  border-color: #44546a;
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(71, 85, 105, 0.16);
+}
+
+.el-button--primary:not(.is-disabled):hover {
+  background: #5c5669;
+  border-color: #5c5669;
+  color: #fff;
+}
+
+.el-button.is-plain {
+  background: rgba(255, 255, 255, 0.24);
+  box-shadow: none;
+}
+
+.el-button--danger.is-plain {
+  --el-button-text-color: #b44c4c;
+  --el-button-border-color: rgba(196, 86, 86, 0.28);
+  --el-button-bg-color: rgba(196, 86, 86, 0.08);
+  --el-button-hover-text-color: #fff;
+  --el-button-hover-bg-color: #b95b5b;
+  --el-button-hover-border-color: #b95b5b;
+  background: rgba(196, 86, 86, 0.08);
+  border-color: rgba(196, 86, 86, 0.28);
+  color: #b44c4c;
+}
+
+.el-button--danger.is-plain:not(.is-disabled):hover {
+  background: #b95b5b;
+  border-color: #b95b5b;
+  color: #fff;
+}
+
+.el-button--success.is-plain {
+  --el-button-text-color: #4d7f3f;
+  --el-button-border-color: rgba(82, 155, 46, 0.26);
+  --el-button-bg-color: rgba(82, 155, 46, 0.08);
+  --el-button-hover-text-color: #fff;
+  --el-button-hover-bg-color: #5f8e4d;
+  --el-button-hover-border-color: #5f8e4d;
+  background: rgba(82, 155, 46, 0.08);
+  border-color: rgba(82, 155, 46, 0.26);
+  color: #4d7f3f;
+}
+
+.el-button--success.is-plain:not(.is-disabled):hover {
+  background: #5f8e4d;
+  border-color: #5f8e4d;
+  color: #fff;
+}
+
+.el-button--warning.is-plain {
+  --el-button-text-color: #9a6a24;
+  --el-button-border-color: rgba(180, 124, 39, 0.26);
+  --el-button-bg-color: rgba(180, 124, 39, 0.08);
+}
+
+.el-button.is-link,
+.el-button.is-link.el-button--primary,
+.el-button.is-link.el-button--success,
+.el-button.is-link.el-button--warning {
+  background: transparent;
+  border-color: transparent;
+  color: #42556e;
+  box-shadow: none;
+}
+
+.el-button.is-link.el-button--danger {
+  background: transparent;
+  border-color: transparent;
+  color: #b44c4c;
+  box-shadow: none;
+}
+
+.el-button.is-link:not(.is-disabled):hover,
+.el-button.is-link.el-button--primary:not(.is-disabled):hover,
+.el-button.is-link.el-button--success:not(.is-disabled):hover,
+.el-button.is-link.el-button--warning:not(.is-disabled):hover {
+  background: transparent;
+  border-color: transparent;
+  color: #63714f;
+  box-shadow: none;
+  transform: none;
+}
+
+.el-button.is-link.el-button--danger:not(.is-disabled):hover {
+  background: transparent;
+  border-color: transparent;
+  color: #923f3f;
+  box-shadow: none;
+  transform: none;
+}
+
+.el-input__wrapper,
+.el-select__wrapper,
+.el-textarea__inner {
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px #dbe3ee inset;
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.el-input__wrapper:hover,
+.el-select__wrapper:hover,
+.el-textarea__inner:hover {
+  box-shadow: 0 0 0 1px #b8c7da inset;
+}
+
+.el-table {
+  border-radius: 8px;
+  overflow: hidden;
+  --el-table-border-color: rgba(123, 137, 156, 0.18);
+  --el-table-row-hover-bg-color: rgba(79, 100, 127, 0.055);
+}
+
+.el-table th.el-table__cell {
+  background: linear-gradient(180deg, #f8fafc, #f2f5f8);
+  color: #4b5d73;
+  font-weight: 700;
+}
+
+.el-tabs__nav-wrap::after {
+  height: 1px;
+  background-color: rgba(123, 137, 156, 0.18);
+}
+
+.el-tabs__item {
+  font-weight: 700;
+  color: #66768a;
+}
+
+.el-tabs__item.is-active {
+  color: #253348;
 }

@@ -13,5 +13,5 @@ public class UserVO {
     private String grade;
     private String major;
     private String role;
+    private Integer status;
 }
-

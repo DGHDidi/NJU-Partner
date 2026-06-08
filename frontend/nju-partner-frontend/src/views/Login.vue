@@ -61,8 +61,6 @@ async function handleLogin() {
     ElMessage.success('登录成功')
     const redirect = route.query.redirect
     router.push(typeof redirect === 'string' && redirect ? redirect : { name: 'Home' })
-  } catch {
-    // 错误提示由 request.js 统一处理
   } finally {
     loading.value = false
   }
@@ -179,7 +177,10 @@ async function handleLogin() {
   justify-content: center;
   padding: 32px 20px;
   overflow: hidden;
-  background: linear-gradient(145deg, #eef4ff 0%, #f7f3ff 48%, #edf8ff 100%);
+  background:
+    radial-gradient(circle at 12% 16%, rgba(82, 99, 132, 0.18), transparent 30%),
+    radial-gradient(circle at 86% 14%, rgba(111, 101, 128, 0.16), transparent 32%),
+    linear-gradient(145deg, #f2f5f8 0%, #f7f5f7 48%, #eef5f2 100%);
 }
 
 .login-bg {
@@ -200,7 +201,7 @@ async function handleLogin() {
   height: 320px;
   top: -80px;
   left: -60px;
-  background: #409eff;
+  background: #596a83;
 }
 
 .blob-2 {
@@ -208,7 +209,7 @@ async function handleLogin() {
   height: 280px;
   right: -40px;
   bottom: 10%;
-  background: #8b7cf6;
+  background: #74677d;
 }
 
 .blob-3 {
@@ -216,7 +217,7 @@ async function handleLogin() {
   height: 200px;
   left: 35%;
   bottom: -60px;
-  background: #79bbff;
+  background: #7b9189;
 }
 
 .login-shell {
@@ -232,8 +233,8 @@ async function handleLogin() {
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.75);
   box-shadow:
-    0 24px 48px rgba(64, 158, 255, 0.14),
-    0 12px 24px rgba(103, 80, 164, 0.08),
+    0 30px 70px rgba(42, 52, 66, 0.16),
+    0 12px 28px rgba(86, 75, 99, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.95);
 }
 
@@ -243,7 +244,9 @@ async function handleLogin() {
   flex-direction: column;
   justify-content: flex-end;
   padding: 36px 32px;
-  background: linear-gradient(160deg, #409eff 0%, #6a7bf7 52%, #8b7cf6 100%);
+  background:
+    linear-gradient(180deg, rgba(23, 32, 51, 0.18), rgba(23, 32, 51, 0.7)),
+    url('https://picsum.photos/seed/nju-evening-campus/900/1200') center / cover;
   overflow: hidden;
 }
 
@@ -252,7 +255,8 @@ async function handleLogin() {
   content: '';
   position: absolute;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(6px);
 }
 
 .login-visual::before {
@@ -276,7 +280,7 @@ async function handleLogin() {
   width: min(72%, 280px);
   transform: translate(-50%, -58%);
   object-fit: contain;
-  filter: drop-shadow(0 16px 24px rgba(0, 0, 0, 0.12));
+  filter: saturate(0.75) contrast(1.05) drop-shadow(0 18px 28px rgba(0, 0, 0, 0.16));
   pointer-events: none;
 }
 
@@ -310,8 +314,9 @@ async function handleLogin() {
   font-size: 12px;
   letter-spacing: 0.06em;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.16);
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  backdrop-filter: blur(10px);
 }
 
 .visual-copy h1 {
@@ -333,7 +338,8 @@ async function handleLogin() {
   align-items: center;
   justify-content: center;
   padding: 40px 36px;
-  background: linear-gradient(180deg, #ffffff 0%, #fafcff 100%);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(248, 250, 252, 0.9) 100%);
 }
 
 .panel-inner {
@@ -371,13 +377,13 @@ async function handleLogin() {
 }
 
 .login-form :deep(.el-input__wrapper:hover) {
-  box-shadow: 0 0 0 1px #c6e2ff inset;
+  box-shadow: 0 0 0 1px #b8c7da inset;
 }
 
 .login-form :deep(.el-input__wrapper.is-focus) {
   box-shadow:
-    0 0 0 1px #409eff inset,
-    0 0 0 3px rgba(64, 158, 255, 0.12);
+    0 0 0 1px #44546a inset,
+    0 0 0 3px rgba(68, 84, 106, 0.12);
 }
 
 .login-btn {
@@ -388,7 +394,7 @@ async function handleLogin() {
   font-weight: 600;
   letter-spacing: 0.04em;
   box-shadow:
-    0 10px 20px rgba(64, 158, 255, 0.28),
+    0 12px 24px rgba(68, 84, 106, 0.24),
     inset 0 1px 0 rgba(255, 255, 255, 0.25);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -396,7 +402,7 @@ async function handleLogin() {
 .login-btn:hover {
   transform: translateY(-1px);
   box-shadow:
-    0 14px 28px rgba(64, 158, 255, 0.32),
+    0 16px 30px rgba(68, 84, 106, 0.28),
     inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 

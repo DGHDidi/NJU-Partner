@@ -11,6 +11,16 @@ export function getApplicationList(id) {
 }
 
 /** 通过报名 PUT /api/applications/{id}/pass */
+/** GET /api/posts/{id}/applications/me */
+export function getMyApplication(id) {
+  return request.get(`/posts/${id}/applications/me`)
+}
+
+/** GET /api/posts/{id}/members */
+export function getApprovedMembers(id) {
+  return request.get(`/posts/${id}/members`)
+}
+
 export function passApplication(id) {
   return request.put(`/applications/${id}/pass`)
 }

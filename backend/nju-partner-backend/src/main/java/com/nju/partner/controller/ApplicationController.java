@@ -36,6 +36,16 @@ public class ApplicationController {
         return Result.success(applicationService.getApplications(id));
     }
 
+    @GetMapping("/posts/{id}/applications/me")
+    public Result<ApplicationVO> getMyApplication(@PathVariable Long id) {
+        return Result.success(applicationService.getMyApplication(id));
+    }
+
+    @GetMapping("/posts/{id}/members")
+    public Result<List<ApplicationVO>> getApprovedMembers(@PathVariable Long id) {
+        return Result.success(applicationService.getApprovedMembers(id));
+    }
+
     @PutMapping("/applications/{id}/pass")
     public Result<Void> pass(@PathVariable Long id) {
         applicationService.passApplication(id);

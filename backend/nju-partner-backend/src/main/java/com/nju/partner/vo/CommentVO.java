@@ -10,8 +10,12 @@ public class CommentVO {
     private Long id;
     private Long postId;
     private Long userId;
-    private UserVO commenter;
+    private Long parentId;
+    private Long replyToUserId;
     private String content;
     private Integer status;
     private LocalDateTime createdTime;
+    private UserVO user;
+    private UserVO replyToUser;
+    private String postTitle;
 }
