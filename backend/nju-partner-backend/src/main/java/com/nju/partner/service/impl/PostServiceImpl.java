@@ -19,9 +19,11 @@ import com.nju.partner.service.PostService;
 import com.nju.partner.service.UserService;
 import com.nju.partner.vo.PostVO;
 import com.nju.partner.vo.UserVO;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -52,14 +54,14 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         }
         List<Post> posts = this.list(new LambdaQueryWrapper<Post>().eq(Post::getUserId, userId)
                 .orderByDesc(Post::getCreatedTime));
-        
+
         Map<Long, User> userMap = userService.listByIds(Collections.singletonList(userId))
                 .stream().collect(Collectors.toMap(User::getId, item -> item));
-        
+
         return posts.stream()
                 .map(post -> toPostVO(post, userMap, Collections.emptyMap()))
                 .collect(Collectors.toList());
-    }       
+    }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
