@@ -50,10 +50,16 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         if (userId == null) {
             throw new BusinessException(ResultCode.UNAUTHORIZED);
         }
-        return this.list(new LambdaQueryWrapper<Post>().eq(Post::getUserId, userId)
-                .orderByDesc(Post::getCreatedTime))
-                .stream().map(this::toPostVO).collect(Collectors.toList());
-    }
+        List<Post> posts = this.list(new LambdaQueryWrapper<Post>().eq(Post::getUserId, userId)
+                .orderByDesc(Post::getCreatedTime));
+        
+        Map<Long, User> userMap = userService.listByIds(Collections.singletonList(userId))
+                .stream().collect(Collectors.toMap(User::getId, item -> item));
+        
+        return posts.stream()
+                .map(post -> toPostVO(post, userMap, Collections.emptyMap()))
+                .collect(Collectors.toList());
+    }       
 
     @Override
     @Transactional(rollbackFor = Exception.class)
