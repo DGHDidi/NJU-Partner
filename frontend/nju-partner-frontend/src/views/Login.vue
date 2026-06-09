@@ -37,7 +37,7 @@ const validateNoSpace = (_rule, value, callback) => {
 const rules = {
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, max: 10, message: '用户名长度为 3-10 个字符', trigger: 'blur' },
+    { min: 1, max: 10, message: '用户名长度为 1-10 个字符', trigger: 'blur' },
     { validator: validateNoSpace, trigger: 'blur' },
   ],
   password: [

@@ -41,7 +41,7 @@ const validateConfirmPassword = (_rule, value, callback) => {
 const rules = {
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, max: 10, message: '用户名长度为 3-10 个字符', trigger: 'blur' },
+    { min: 1, max: 10, message: '用户名长度为 1-10 个字符', trigger: 'blur' },
     { validator: validateNoSpace, trigger: 'blur' },
   ],
   password: [
@@ -132,7 +132,7 @@ async function handleRegister() {
         @submit.prevent="handleRegister"
       >
         <el-form-item label="用户名" prop="username">
-          <el-input v-model="form.username" placeholder="3-10 个字符，不能含空格" clearable />
+          <el-input v-model="form.username" placeholder="1-10 个字符，不能含空格" clearable />
         </el-form-item>
         <el-form-item label="密码" prop="password">
           <el-input
